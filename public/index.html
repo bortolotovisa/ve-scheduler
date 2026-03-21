@@ -307,7 +307,31 @@ nav button:hover:not(.active){color:var(--text);}
 .dh-entry{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;}
 .dh-entry:last-child{border-bottom:none;}
 
-/* ── TOAST ── */
+/* ── ACTIVE WORK POPUP ── */
+.active-work-popup{
+  position:fixed;bottom:24px;left:24px;z-index:200;
+  background:var(--surface);border:1px solid var(--amber-dim);
+  border-left:3px solid var(--amber);
+  border-radius:10px;padding:14px 16px;
+  min-width:280px;max-width:340px;
+  box-shadow:0 4px 24px rgba(0,0,0,.5);
+  display:none;
+  animation:slideUp .25s ease;
+}
+.active-work-popup.show{display:block;}
+@keyframes slideUp{from{transform:translateY(10px);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.awp-label{font-size:9px;text-transform:uppercase;letter-spacing:2px;color:var(--amber);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.awp-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.awp-part{font-size:13px;font-weight:500;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.awp-project{font-size:11px;color:var(--muted);margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.awp-timer{font-family:var(--mono);font-size:20px;font-weight:300;color:var(--amber);margin-bottom:10px;}
+.awp-actions{display:flex;gap:6px;}
+.awp-btn{background:none;border:1px solid;padding:4px 12px;cursor:pointer;font-size:11px;border-radius:4px;font-weight:600;transition:all .15s;}
+.awp-pause{border-color:#6a5000;color:#c09020;}
+.awp-pause:hover{background:#1a1000;}
+.awp-done{border-color:var(--green-dim);color:var(--green);}
+.awp-done:hover{background:var(--green-bg);}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;padding:10px 16px;font-size:12px;transform:translateY(60px);opacity:0;transition:all .25s;z-index:999;border-left:3px solid var(--green);}
 .toast.show{transform:translateY(0);opacity:1;}
 .nowo-fyi{opacity:.6;}
@@ -440,6 +464,18 @@ nav button:hover:not(.active){color:var(--text);}
 
 <div class="toast" id="toast"></div>
 
+<!-- ACTIVE WORK POPUP -->
+<div class="active-work-popup" id="active-work-popup">
+  <div class="awp-label"><div class="awp-dot"></div> Currently working on</div>
+  <div class="awp-part" id="awp-part"></div>
+  <div class="awp-project" id="awp-project"></div>
+  <div class="awp-timer" id="awp-timer">0m</div>
+  <div class="awp-actions">
+    <button class="awp-btn awp-pause" id="awp-pause-btn">⏸ Pause</button>
+    <button class="awp-btn awp-done" id="awp-done-btn">✓ Done</button>
+  </div>
+</div>
+
 <script>
 // ─── CONSTANTS ────────────────────────────────────────────────────────────────
 const PROG_COLORS=['prog-0','prog-1','prog-2','prog-3','prog-4','prog-5','prog-6','prog-7'];
@@ -504,6 +540,9 @@ async function doLogout() {
   sessionToken = null; currentUser = null;
   localStorage.removeItem('ve_token');
   clearAllTimers();
+  stopPolling();
+  if (awpTimer) { clearInterval(awpTimer); awpTimer = null; }
+  document.getElementById('active-work-popup').classList.remove('show');
   document.getElementById('app').style.display = 'none';
   showLoginPage();
 }
@@ -535,6 +574,8 @@ async function bootApp() {
   loadSummary();
   const perms = ROLE_PERMS[currentUser.role] || ROLE_PERMS.guest;
   setView(perms.tabs[0]);
+  startPolling();
+  updateActiveWorkPopup();
 }
 
 function setupNav() {
@@ -1024,6 +1065,7 @@ function renderMyWork(){
 
   // Auto-populate next-part list if pause is open
   if(pauseOpenId)setTimeout(()=>filterNextParts(pauseOpenId,pauseOpenId),0);
+  updateActiveWorkPopup();
 }
 
 // ─── RENDER ANALYTICS ─────────────────────────────────────────────────────────
@@ -1175,7 +1217,82 @@ function openPause(pid,partId){selectedNextPartId=null;pauseOpenId=partId;reopen
 function openReopen(pid,partId){reopenOpenId=partId;pauseOpenId=null;renderMyWork();}
 function render(){renderDash();const vp=document.getElementById('view-programming');if(vp?.style.display!=='none')renderProg();}
 
-// ─── TOAST ───────────────────────────────────────────────────────────────────
+// ─── AUTO REFRESH (polling) ───────────────────────────────────────────────────
+let pollInterval = null;
+
+function startPolling() {
+  stopPolling();
+  pollInterval = setInterval(async () => {
+    try {
+      const fresh = await api('GET', '/api/projects');
+      // Only re-render if data actually changed
+      if (JSON.stringify(fresh) !== JSON.stringify(projects)) {
+        projects = fresh;
+        renderCurrentView();
+        updateActiveWorkPopup();
+      }
+    } catch(e) {} // silent fail — no network noise
+  }, 30000); // every 30 seconds
+}
+
+function stopPolling() {
+  if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+}
+
+function renderCurrentView() {
+  renderDash();
+  const vp = document.getElementById('view-programming');
+  const vm = document.getElementById('view-mywork');
+  if (vp?.style.display !== 'none') renderProg();
+  if (vm?.style.display !== 'none') renderMyWork();
+}
+
+// ─── ACTIVE WORK POPUP ────────────────────────────────────────────────────────
+let awpTimer = null;
+
+function updateActiveWorkPopup() {
+  if (!currentUser || currentUser.role === 'guest') return;
+  const popup = document.getElementById('active-work-popup');
+
+  // Find the part currently in progress for this user
+  let activePart = null, activePid = null, activeProj = null;
+  for (const p of projects) {
+    const pt = p.parts.find(pt => pt.assignedTo === currentUser.name && pt.status === 'inprogress');
+    if (pt) { activePart = pt; activePid = p.id; activeProj = p; break; }
+  }
+
+  if (!activePart) {
+    popup.classList.remove('show');
+    if (awpTimer) { clearInterval(awpTimer); awpTimer = null; }
+    return;
+  }
+
+  popup.classList.add('show');
+  document.getElementById('awp-part').textContent = activePart.desc;
+  document.getElementById('awp-project').textContent = `${activeProj.client} · ${activeProj.projectName}`;
+
+  // Wire up buttons
+  document.getElementById('awp-pause-btn').onclick = () => openPause(activePid, activePart.id);
+  document.getElementById('awp-done-btn').onclick = () => donePart(activePid, activePart.id);
+
+  // Live timer
+  if (awpTimer) clearInterval(awpTimer);
+  const startMs = calcTimeSpent(activePart.log || []);
+  const startWall = Date.now();
+  function updateTimer() {
+    const el = document.getElementById('awp-timer');
+    if (el) el.textContent = fmtDur(startMs + (Date.now() - startWall));
+  }
+  updateTimer();
+  awpTimer = setInterval(updateTimer, 1000); // update every second for the popup
+}
+
+// Override render to also update popup
+const _render = render;
+function render() {
+  _render();
+  updateActiveWorkPopup();
+}
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3200);}
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});}
 setInterval(tick,1000);tick();
