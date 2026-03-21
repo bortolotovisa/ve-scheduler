@@ -709,7 +709,7 @@ function logEvt(action,reason=''){return{ts:Date.now(),action,reason,user:curren
 
 async function startPart(pid,partId){
   await batchUpdate([{pid,partId,status:'inprogress',log:logEvt('started')}]);
-  render();toast('Started — timer running');
+  render();renderMyWork();toast('Started — timer running');
 }
 async function pausePart(pid,partId,reason,nextPartId){
   const updates=[{pid,partId,status:'paused',log:logEvt('paused',reason)}];
@@ -719,19 +719,19 @@ async function pausePart(pid,partId,reason,nextPartId){
     if(nextPid) updates.push({pid:nextPid,partId:nextPartId,status:'inprogress',log:logEvt('started','switched from previous part')});
   }
   await batchUpdate(updates);
-  selectedNextPartId=null;pauseOpenId=null;render();toast('Paused · reason logged');
+  selectedNextPartId=null;pauseOpenId=null;render();renderMyWork();toast('Paused · reason logged');
 }
 async function resumePart(pid,partId){
   await batchUpdate([{pid,partId,status:'inprogress',log:logEvt('resumed')}]);
-  render();toast('Resumed');
+  render();renderMyWork();toast('Resumed');
 }
 async function donePart(pid,partId){
   await batchUpdate([{pid,partId,status:'done',log:logEvt('done')}]);
-  render();loadSummary();toast('Done ✓ — part hidden from agenda');
+  render();renderMyWork();loadSummary();toast('Done ✓ — part hidden from agenda');
 }
 async function reopenPart(pid,partId,reason){
   await batchUpdate([{pid,partId,status:'inprogress',log:logEvt('reopened',reason)}]);
-  reopenOpenId=null;render();toast('Reopened — back in progress');
+  reopenOpenId=null;render();renderMyWork();toast('Reopened — back in progress');
 }
 async function assignPart(pid,partId,name){
   await batchUpdate([{pid,partId,assignedTo:name||null,log:name?logEvt('assigned',`to ${name}`):null}].filter(u=>u.log||u.assignedTo!==undefined));
