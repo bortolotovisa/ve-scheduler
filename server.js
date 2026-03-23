@@ -91,8 +91,29 @@ app.post('/api/auth/login', (req, res) => {
   const user = readJSON(USERS_FILE, []).find(u => u.name === name);
   if (!user || !bcrypt.compareSync(password, user.passwordHash))
     return res.status(401).json({ error: 'Invalid credentials' });
+  if (user.mustChange)
+    return res.json({ mustChange: true, name: user.name, color: user.color, role: user.role, tabs: user.tabs });
   const token = createSession(user);
-  res.json({ token, name: user.name, color: user.color, role: user.role });
+  res.json({ token, name: user.name, color: user.color, role: user.role, tabs: user.tabs });
+});
+
+app.post('/api/auth/set-password', (req, res) => {
+  const { name, currentPassword, newPassword } = req.body;
+  const users = readJSON(USERS_FILE, []);
+  const user = users.find(u => u.name === name);
+  if (!user || !bcrypt.compareSync(currentPassword, user.passwordHash))
+    return res.status(401).json({ error: 'Invalid credentials' });
+  user.passwordHash = bcrypt.hashSync(newPassword, 8);
+  user.mustChange = false;
+  writeJSON(USERS_FILE, users);
+  const token = createSession(user);
+  res.json({ token, name: user.name, color: user.color, role: user.role, tabs: user.tabs });
+});
+
+// Reset all project data — manager only
+app.delete('/api/projects/all', requireAuth('manager'), (req, res) => {
+  writeJSON(PROJECTS_FILE, []);
+  res.json({ ok: true });
 });
 
 app.post('/api/auth/logout', (req, res) => {

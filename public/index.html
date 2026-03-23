@@ -284,14 +284,30 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       <div class="login-mark">VE</div>
       <div><div class="login-brand">Visual Elements</div><div class="login-sub">Programming Scheduler</div></div>
     </div>
-    <label class="fl">Your name</label>
-    <select class="fs" id="ln"></select>
-    <label class="fl">Password</label>
-    <input class="fi" type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
-    <div class="login-err" id="lerr">Incorrect password.</div>
-    <button class="login-btn" onclick="doLogin()">Sign In</button>
-    <div class="login-skip"><a onclick="skipLogin()">Continue as guest</a></div>
-    <div class="login-hint"><strong>Test accounts:</strong><br>Juliana (manager) · ve2026<br>Programmer 2 · ve2026<br>Project Manager · ve2026<br>Viewer · ve2026</div>
+
+    <!-- NORMAL LOGIN -->
+    <div id="login-normal">
+      <label class="fl">Your name</label>
+      <select class="fs" id="ln"></select>
+      <label class="fl">Password</label>
+      <input class="fi" type="password" id="lp" placeholder="Password" onkeydown="if(event.key==='Enter')doLogin()">
+      <div class="login-err" id="lerr">Incorrect password.</div>
+      <button class="login-btn" onclick="doLogin()">Sign In</button>
+      <div class="login-skip"><a onclick="skipLogin()">Continue as guest</a></div>
+    </div>
+
+    <!-- FIRST ACCESS: CREATE PASSWORD -->
+    <div id="login-firstaccess" style="display:none">
+      <div style="background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:var(--r6);padding:10px 12px;margin-bottom:16px;font-size:12px;color:var(--amber)">
+        👋 First access — please create your password
+      </div>
+      <label class="fl">New Password</label>
+      <input class="fi" type="password" id="pw-new" placeholder="Choose a password" onkeydown="if(event.key==='Enter')document.getElementById('pw-confirm').focus()">
+      <label class="fl">Confirm Password</label>
+      <input class="fi" type="password" id="pw-confirm" placeholder="Repeat your password" onkeydown="if(event.key==='Enter')doSetPassword()">
+      <div class="login-err" id="pw-err">Passwords do not match.</div>
+      <button class="login-btn" onclick="doSetPassword()">Create Password & Sign In</button>
+    </div>
   </div>
 </div>
 
@@ -367,7 +383,11 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
     <div class="modal-sub">Set names, passwords and which tabs each person can access.</div>
     <div id="users-list"></div>
     <button class="add-user-btn" onclick="addUserRow()">+ Add person</button>
-    <div class="modal-actions"><button class="btn-ok" onclick="saveUsers()">Save</button><button class="btn-cancel" onclick="closeMod('team')">Cancel</button></div>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="saveUsers()">Save Team</button>
+      <button class="btn-cancel" onclick="closeMod('team')">Cancel</button>
+      <button class="btn-cancel" onclick="confirmResetData()" style="margin-left:auto;color:var(--red);border-color:var(--red-dim)">🗑 Reset All Project Data</button>
+    </div>
   </div>
 </div>
 <div class="moverlay" id="mod-dh" onclick="if(event.target===this)closeMod('dh')">
@@ -553,12 +573,43 @@ W53240/W,105995-02 - CLEARANCE WALL BAY W LIGHT BOX,drawing ok`);
 }
 
 function populateLogin(){document.getElementById('ln').innerHTML=users.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');}
+let firstAccessUser=null;
+
 function doLogin(){
   const name=document.getElementById('ln').value,pw=document.getElementById('lp').value;
   const u=users.find(x=>x.name===name&&x.pw===pw);
   if(!u){document.getElementById('lerr').style.display='block';return;}
   document.getElementById('lerr').style.display='none';document.getElementById('lp').value='';
-  currentUser={name:u.name,color:u.color,role:u.role,tabs:u.tabs||ROLE_DEFAULT_TABS[u.role]||['dashboard']};bootApp();
+  if(u.mustChange){
+    firstAccessUser=u;
+    document.getElementById('login-normal').style.display='none';
+    document.getElementById('login-firstaccess').style.display='';
+    document.getElementById('pw-new').focus();
+    return;
+  }
+  currentUser={name:u.name,color:u.color,role:u.role,tabs:u.tabs||ROLE_DEFAULT_TABS[u.role]||['dashboard']};
+  bootApp();
+}
+function doSetPassword(){
+  const pw1=document.getElementById('pw-new').value;
+  const pw2=document.getElementById('pw-confirm').value;
+  const err=document.getElementById('pw-err');
+  if(!pw1||pw1.length<4){err.textContent='Password must be at least 4 characters.';err.style.display='block';return;}
+  if(pw1!==pw2){err.textContent='Passwords do not match.';err.style.display='block';return;}
+  err.style.display='none';
+  const u=users.find(x=>x.id===firstAccessUser.id);
+  if(u){u.pw=pw1;u.mustChange=false;save();}
+  currentUser={name:firstAccessUser.name,color:firstAccessUser.color,role:firstAccessUser.role,tabs:firstAccessUser.tabs||ROLE_DEFAULT_TABS[firstAccessUser.role]||['dashboard']};
+  firstAccessUser=null;
+  document.getElementById('login-firstaccess').style.display='none';
+  document.getElementById('login-normal').style.display='';
+  document.getElementById('pw-new').value='';document.getElementById('pw-confirm').value='';
+  bootApp();
+}
+function confirmResetData(){
+  closeMod('team');
+  pendingDelete={type:'alldata'};
+  showDeleteConfirm('Delete ALL project data? This cannot be undone.');
 }
 function skipLogin(){currentUser={name:'Guest',color:'pnone',role:'guest'};bootApp();}
 function doLogout(){
@@ -1180,7 +1231,8 @@ function showDeleteConfirm(msg){document.getElementById('del-msg').textContent=m
 function confirmDelete(){
   document.getElementById('del-toast').classList.remove('show');if(!pendingDelete)return;
   if(pendingDelete.type==='load'){projects=projects.filter(x=>x.id!==pendingDelete.pid);save();render();renderSchedule();renderSummary();toast('Load deleted');}
-  else{const p=projects.find(x=>x.id===pendingDelete.pid);if(p)p.parts=p.parts.filter(x=>x.id!==pendingDelete.partId);save();render();renderSchedule();toast('W/O deleted');}
+  else if(pendingDelete.type==='part'){const p=projects.find(x=>x.id===pendingDelete.pid);if(p)p.parts=p.parts.filter(x=>x.id!==pendingDelete.partId);save();render();renderSchedule();toast('W/O deleted');}
+  else if(pendingDelete.type==='alldata'){projects=[];save();render();renderSchedule();renderSummary();toast('All project data cleared ✓');}
   pendingDelete=null;
 }
 function cancelDelete(){document.getElementById('del-toast').classList.remove('show');pendingDelete=null;}
@@ -1307,9 +1359,9 @@ function renderUsers(){
     const isMe=u.name===currentUser?.name;
     const utabs=u.tabs||ROLE_DEFAULT_TABS[u.role]||['dashboard'];
     const tabChecks=ALL_TABS.map(t=>{
-      const locked=(t==='dashboard')||(isMe&&t!=='dashboard'); // manager can't lock themselves out
+      const locked=(t==='dashboard')||(isMe);
       return`<label style="display:flex;align-items:center;gap:4px;cursor:${locked?'not-allowed':'pointer'};opacity:${locked?'.5':'1'};font-size:11px;color:var(--text2);white-space:nowrap">
-        <input type="checkbox" id="utab-${i}-${t}" ${utabs.includes(t)?'checked':''} ${locked?'disabled':''} style="accent-color:var(--amber);cursor:${locked?'not-allowed':'pointer'}">
+        <input type="checkbox" id="utab-${i}-${t}" ${utabs.includes(t)?'checked':''} ${locked?'disabled':''} style="accent-color:var(--amber)">
         ${TAB_LABELS[t]}
       </label>`;
     }).join('');
@@ -1317,14 +1369,17 @@ function renderUsers(){
       <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px;flex-wrap:wrap">
         <span class="pchip ${PCOLORS[i]||'p0'}" style="flex-shrink:0">${i+1}</span>
         <input class="uinp" placeholder="Name" value="${u.name}" id="un-${i}" style="flex:1;min-width:100px" ${isMe?'disabled':''}>
-        <input class="uinp" placeholder="Password" value="${u.pw||''}" id="up-${i}" style="max-width:110px">
+        <input class="uinp" placeholder="Password" value="${u.pw||''}" id="up-${i}" style="max-width:110px" ${isMe?'disabled title="Change your own password after login"':''}>
         <select class="msel" id="ur-${i}" style="max-width:120px" onchange="onRoleChange(${i})">
           <option value="manager" ${u.role==='manager'?'selected':''}>Manager</option>
           <option value="programmer" ${u.role==='programmer'?'selected':''}>Programmer</option>
           <option value="projectmanager" ${u.role==='projectmanager'?'selected':''}>Project Manager</option>
           <option value="viewer" ${u.role==='viewer'?'selected':''}>Viewer</option>
         </select>
-        ${isMe?'<span style="font-size:10px;color:var(--amber)">You</span>':`<button class="udel" onclick="delUser(${i})">✕</button>`}
+        ${!isMe?`<label style="display:flex;align-items:center;gap:4px;font-size:10px;color:var(--muted);white-space:nowrap;cursor:pointer" title="User must create their own password on first login">
+          <input type="checkbox" id="umust-${i}" ${u.mustChange?'checked':''} style="accent-color:var(--amber)"> 1st access
+        </label>`:''}
+        ${isMe?`<span style="font-size:10px;color:var(--amber)">You</span>`:`<button class="udel" onclick="delUser(${i})">✕</button>`}
       </div>
       <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:8px;border-top:1px solid var(--border)">
         <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;font-family:var(--cond);font-weight:700;flex-shrink:0">Tabs:</span>
@@ -1344,7 +1399,7 @@ function onRoleChange(i){
 }
 function addUserRow(){
   if(users.length>=8){toast('Max 8 users');return;}
-  users.push({id:String(Date.now()),name:'',pw:'ve2026',color:PCOLORS[users.length]||'p0',role:'programmer',tabs:['dashboard','mywork']});
+  users.push({id:String(Date.now()),name:'',pw:'ve2026',color:PCOLORS[users.length]||'p0',role:'programmer',tabs:['dashboard','mywork'],mustChange:true});
   renderUsers();
 }
 function delUser(i){users.splice(i,1);renderUsers();}
@@ -1354,19 +1409,19 @@ function saveUsers(){
       const cb=document.getElementById(`utab-${i}-${t}`);
       return cb?cb.checked:u.tabs?.includes(t);
     });
-    // Always include dashboard
     if(!tabs.includes('dashboard'))tabs.unshift('dashboard');
+    const mustCb=document.getElementById(`umust-${i}`);
     return{
       ...u,
       name:(document.getElementById('un-'+i)?.value||u.name).trim(),
-      pw:(document.getElementById('up-'+i)?.value||u.pw).trim(),
+      pw:(document.getElementById('up-'+i)?.value||u.pw||'').trim()||u.pw,
       color:PCOLORS[i]||'p0',
       role:document.getElementById('ur-'+i)?.value||u.role,
-      tabs
+      tabs,
+      mustChange:mustCb?mustCb.checked:(u.mustChange||false)
     };
   }).filter(u=>u.name&&u.pw);
   users=updated;
-  // Update currentUser tabs if they were edited
   const me=users.find(u=>u.name===currentUser?.name);
   if(me){currentUser.tabs=me.tabs;currentUser.role=me.role;}
   save();closeMod('team');setupNav();setupHeader();toast('Team updated');
