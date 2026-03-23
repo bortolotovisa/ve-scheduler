@@ -68,11 +68,11 @@ nav button:hover:not(.active){background:var(--surface3);color:var(--text2);}
 .hdr-user{display:flex;align-items:center;gap:7px;padding:0 8px;border-right:1px solid var(--border2);}
 .udot{width:6px;height:6px;border-radius:50%;background:var(--green);}
 main{padding:16px 20px;max-width:1500px;margin:0 auto;}
-.stats-row{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:14px;}
+.stats-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;}
 .stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden;}
 .stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border2);}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-family:var(--cond);font-weight:600;}
-.stat-value{font-family:var(--cond);font-size:28px;font-weight:600;line-height:1;letter-spacing:-1px;}
+.stat-value{font-family:var(--cond);font-size:22px;font-weight:600;line-height:1;letter-spacing:-1px;}
 .stat-sub{font-size:10px;color:var(--muted);margin-top:3px;}
 .ca{color:var(--amber);}.cb{color:var(--blue);}.cg{color:var(--green);}.cr{color:var(--red);}.cp{color:var(--purple);}
 .summary-banner{background:var(--surface);border:1px solid var(--border);border-radius:var(--r8);padding:10px 16px;margin-bottom:14px;display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
@@ -271,7 +271,18 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:var(--r8);padding:9px 14px;font-size:12px;font-family:var(--cond);font-weight:500;transform:translateY(60px);opacity:0;transition:all .25s;z-index:999;}
 .toast.show{transform:translateY(0);opacity:1;}
 .nowo-fyi{opacity:.55;}
-@media(max-width:700px){.stats-row{grid-template-columns:repeat(3,1fr);}.pring{display:none;}header{padding:0 12px;}main{padding:12px;}}
+/* DROPDOWN MENU */
+.ddwrap{position:relative;display:inline-block;}
+.ddbtn{background:none;border:1px solid var(--border2);color:var(--muted);padding:1px 7px;cursor:pointer;font-size:15px;border-radius:var(--r4);line-height:1.4;transition:all .12s;font-weight:700;}
+.ddbtn:hover{color:var(--text);border-color:var(--border3);background:var(--surface2);}
+.ddmenu{position:absolute;right:0;top:calc(100% + 4px);background:var(--surface);border:1px solid var(--border2);border-radius:var(--r8);box-shadow:0 8px 24px rgba(0,0,0,.45);z-index:500;min-width:160px;overflow:hidden;display:none;}
+.ddmenu.open{display:block;animation:fadeIn .1s ease;}
+.dditem{display:flex;align-items:center;gap:8px;padding:8px 14px;cursor:pointer;font-size:12px;font-family:var(--cond);font-weight:600;letter-spacing:.3px;transition:background .1s;white-space:nowrap;border:none;background:none;width:100%;color:var(--text2);text-align:left;}
+.dditem:hover{background:var(--surface2);}
+.dditem.red{color:var(--red);}.dditem.red:hover{background:var(--red-bg);}
+.dditem.green{color:var(--green);}.dditem.blue{color:var(--blue);}.dditem.amber{color:var(--amber);}
+.dd-divider{height:1px;background:var(--border);margin:3px 0;}
+@media(max-width:900px){.stats-row{grid-template-columns:repeat(4,1fr);}.stat-value{font-size:20px;}}@media(max-width:700px){.stats-row{grid-template-columns:repeat(3,1fr);}.pring{display:none;}header{padding:0 12px;}main{padding:12px;}}
 </style>
 </head>
 <body>
@@ -320,6 +331,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       <button class="hdr-btn" onclick="openGSearch()" style="letter-spacing:0">🔍 Search</button>
       <div class="hdr-user" id="hdr-user"></div>
       <button class="hdr-btn" id="team-btn" style="display:none" onclick="openMod('team')">⚙ Team</button>
+      <label class="hdr-btn" id="import-hdr-btn" style="display:none;cursor:pointer">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importFile(event)"></label>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
       <button class="hdr-btn" onclick="doLogout()">Sign Out</button>
     </div>
@@ -334,6 +346,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
         <div class="stat"><div class="stat-label">In Progress</div><div class="stat-value ca" id="s-prog">0</div></div>
         <div class="stat"><div class="stat-label">Outside</div><div class="stat-value cp" id="s-out">0</div></div>
         <div class="stat"><div class="stat-label">Done</div><div class="stat-value cg" id="s-done">0</div></div>
+        <div class="stat"><div class="stat-label">Delivered</div><div class="stat-value cg" id="s-delivered">0</div><div class="stat-sub">Closed loads</div></div>
       </div>
       <div class="filter-bar">
         <span class="filter-label">Show:</span>
@@ -343,6 +356,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
         <button class="pill" onclick="setFilter('nowo',this)">No W/O ⚠</button>
         <button class="pill" onclick="setFilter('outside',this)">Outside</button>
         <button class="pill" onclick="setFilter('done',this)">Done</button>
+        <button class="pill" onclick="setFilter('delivered',this)">Delivered</button>
         <input class="search" type="text" placeholder="Search..." oninput="doSearch(this.value)">
       </div>
       <div class="projects-list" id="dash-list"></div>
@@ -372,7 +386,18 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       <div class="mw-top"><div><div class="mw-name" id="mw-name"></div><div class="mw-sub" id="mw-sub"></div></div></div>
       <div id="mw-body"></div>
     </div>
-    <div id="view-analytics" style="display:none"><div id="analytics-body"></div></div>
+    <div id="view-analytics" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
+        <div style="display:flex;gap:6px;align-items:center">
+          <span class="filter-label">Period:</span>
+          <button class="pill active" id="ap-all" onclick="setAnalyticsPeriod('all',this)">All time</button>
+          <button class="pill" id="ap-30" onclick="setAnalyticsPeriod(30,this)">30 days</button>
+          <button class="pill" id="ap-7" onclick="setAnalyticsPeriod(7,this)">7 days</button>
+        </div>
+        <button class="hdr-btn" onclick="exportAnalytics()" style="color:var(--green);border-color:var(--green-dim)">⬇ Export CSV</button>
+      </div>
+      <div id="analytics-body"></div>
+    </div>
   </main>
 </div>
 
@@ -424,6 +449,57 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
     <div id="part-status-section"><label class="fl">Status</label><select class="fs" id="part-status"><option value="nowo">No W/O</option><option value="drawing">Drawing OK</option><option value="outside">Outside</option><option value="unknown">Unknown</option></select></div>
     <div id="part-due-section"><label class="fl">Due Date <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional — overrides Load)</span></label><input class="fi" id="part-due" type="date" style="color-scheme:dark light"></div>
     <div class="modal-actions"><button class="btn-ok" onclick="savePart()">Save</button><button class="btn-cancel" onclick="closeMod('part')">Cancel</button></div>
+  </div>
+</div>
+<!-- MODAL: DELIVER LOAD -->
+<div class="moverlay" id="mod-deliver" onclick="if(event.target===this)closeMod('deliver')">
+  <div class="modal" style="max-width:480px">
+    <div class="modal-title">Mark Load as Delivered</div>
+    <div class="modal-sub" id="deliver-sub"></div>
+    <input type="hidden" id="deliver-pid">
+    <div id="deliver-pending-section" style="display:none">
+      <div style="background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:var(--r6);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--amber)">
+        ⚠ This load has pending W/Os. What should happen to them?
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px;margin-bottom:14px">
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r6);cursor:pointer" id="dp-opt-done">
+          <input type="radio" name="dp-choice" value="done" style="accent-color:var(--amber)">
+          <div><div style="font-size:12px;font-weight:600;color:var(--text)">Mark all as Done</div><div style="font-size:11px;color:var(--muted)">All pending parts will be set to Done</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r6);cursor:pointer" id="dp-opt-keep">
+          <input type="radio" name="dp-choice" value="keep" style="accent-color:var(--amber)">
+          <div><div style="font-size:12px;font-weight:600;color:var(--text)">Keep as-is</div><div style="font-size:11px;color:var(--muted)">Parts keep their current status for reference</div></div>
+        </label>
+        <label style="display:flex;align-items:center;gap:10px;padding:9px 12px;border:1px solid var(--border2);border-radius:var(--r6);cursor:pointer" id="dp-opt-outside">
+          <input type="radio" name="dp-choice" value="outside" style="accent-color:var(--amber)">
+          <div><div style="font-size:12px;font-weight:600;color:var(--text)">Mark all as Outside</div><div style="font-size:11px;color:var(--muted)">Pending parts were handled externally</div></div>
+        </label>
+      </div>
+      <div id="deliver-pending-list" style="background:var(--surface2);border:1px solid var(--border);border-radius:var(--r6);padding:10px 14px;margin-bottom:4px;max-height:140px;overflow-y:auto;font-size:11px;color:var(--muted)"></div>
+    </div>
+    <div id="deliver-allgood" style="display:none">
+      <div style="background:var(--green-bg);border:1px solid var(--green-dim);border-radius:var(--r6);padding:10px 14px;margin-bottom:14px;font-size:12px;color:var(--green)">
+        ✓ All W/Os are complete — ready to deliver!
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="confirmDeliver()" style="background:var(--green);border:none">✓ Mark as Delivered</button>
+      <button class="btn-cancel" onclick="closeMod('deliver')">Cancel</button>
+    </div>
+  </div>
+</div>
+<!-- MODAL: REOPEN DELIVERED LOAD -->
+<div class="moverlay" id="mod-reopen-load" onclick="if(event.target===this)closeMod('reopen-load')">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Reopen Load</div>
+    <div class="modal-sub" id="reopen-load-sub"></div>
+    <input type="hidden" id="reopen-load-pid">
+    <label class="fl">Reason for reopening</label>
+    <input class="fi" id="reopen-load-reason" placeholder="e.g. Missing parts, client request...">
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="confirmReopenLoad()">↩ Reopen</button>
+      <button class="btn-cancel" onclick="closeMod('reopen-load')">Cancel</button>
+    </div>
   </div>
 </div>
 <div class="moverlay" id="mod-move" onclick="if(event.target===this)closeMod('move')">
@@ -625,18 +701,41 @@ function bootApp(){
   document.getElementById('app').style.display='block';
   setupNav();setupHeader();renderSummary();
   const perms=getPerms(currentUser);
-  setView(perms.tabs[0]);updateAWP();
+  setView(perms.tabs[0]);
+  updateAWP(); // restore active work popup if there's an in-progress part
+}
+function getMyWorkBadge(){
+  if(!currentUser||currentUser.role==='guest')return'';
+  const lastSeen=parseInt(localStorage.getItem(`ve_seen_${currentUser.name}`)||'0');
+  const newCount=projects.flatMap(p=>p.parts).filter(pt=>
+    pt.assignedTo===currentUser.name&&
+    pt.status!=='done'&&
+    (pt.assignedAt||0)>lastSeen
+  ).length;
+  return newCount?`<span style="display:inline-block;background:var(--red);color:#fff;font-size:9px;font-weight:700;min-width:14px;height:14px;border-radius:7px;text-align:center;line-height:14px;margin-left:4px;padding:0 3px">${newCount}</span>`:'';
+}
+function markMyWorkSeen(){
+  if(currentUser)localStorage.setItem(`ve_seen_${currentUser.name}`,String(Date.now()));
+  setupNav(); // refresh nav to clear badge
 }
 function setupNav(){
   const perms=getPerms(currentUser);
-  document.getElementById('main-nav').innerHTML=perms.tabs.map(t=>`<button onclick="setView('${t}')" id="nav-${t}">${TAB_LABELS[t]}</button>`).join('');
+  document.getElementById('main-nav').innerHTML=perms.tabs.map(t=>{
+    const badge=t==='mywork'?getMyWorkBadge():'';
+    return`<button onclick="setView('${t}')" id="nav-${t}">${TAB_LABELS[t]}${badge}</button>`;
+  }).join('');
 }
 function setupHeader(){
   const perms=getPerms(currentUser);
   document.getElementById('hdr-user').innerHTML=`<div class="udot"></div><span class="pchip ${currentUser.color}" style="font-size:10px">${currentUser.name}</span><span style="color:var(--muted);font-size:10px;margin-left:2px">${currentUser.role}</span>`;
   document.getElementById('team-btn').style.display=perms.canTeam?'':'none';
+  // Import CSV — manager only, always visible in header
+  const importBtn=document.getElementById('import-hdr-btn');
+  if(importBtn)importBtn.style.display=currentUser?.role==='manager'?'':'none';
   const tb=document.getElementById('prog-toolbar');
-  if(tb&&canEdit())tb.innerHTML=`<button class="hdr-btn" onclick="openNewLoad()" style="color:var(--amber);border-color:var(--amber-dim)">+ New Load</button><label class="hdr-btn" style="cursor:pointer">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importFile(event)"></label>`;
+  if(tb&&canEdit())tb.innerHTML=`<button class="hdr-btn" onclick="openNewLoad()" style="color:var(--amber);border-color:var(--amber-dim)">+ New Load</button>`;
+  // Import CSV in toolbar also only for manager
+  if(tb&&currentUser?.role==='manager')tb.innerHTML+=`<label class="hdr-btn" style="cursor:pointer">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importFile(event)"></label>`;
 }
 
 function parseDate(str){
@@ -783,7 +882,12 @@ function pausePt(pid,partId,reason,nextId){
 function resumePt(pid,partId){updatePt(pid,partId,{status:'inprogress',log:logEvt('resumed')});render();renderMyWork();updateAWP();toast('Resumed ▶');}
 function donePt(pid,partId){updatePt(pid,partId,{status:'done',log:logEvt('done')});render();renderMyWork();renderSummary();updateAWP();toast('Done ✓');}
 function reopenPt(pid,partId,reason){updatePt(pid,partId,{status:'inprogress',log:logEvt('reopened',reason)});reopenOpenId=null;render();renderMyWork();updateAWP();toast('Reopened');}
-function assignPt(pid,partId,name){updatePt(pid,partId,{assignedTo:name||null});renderProg();toast(name?`Assigned to ${name}`:'Unassigned');}
+function assignPt(pid,partId,name){
+  const p=projects.find(x=>x.id===pid);
+  const pt=p?.parts.find(x=>x.id===partId);
+  if(pt){pt.assignedTo=name||null;if(name)pt.assignedAt=Date.now();}
+  save();renderProg();setupNav();toast(name?`Assigned to ${name}`:'Unassigned');
+}
 function setStatus(pid,partId,status){updatePt(pid,partId,{status});render();toast('Status updated');}
 function saveNotes(pid,partId,notes){updatePt(pid,partId,{notes});toast('Notes saved');}
 
@@ -882,6 +986,9 @@ function renderSummary(){
 }
 function filtered(){
   let list=[...projects].sort((a,b)=>{const o={overdue:0,urgent:1,soon:2,far:3};return(o[urgency(a)]??3)-(o[urgency(b)]??3)||(dl(a.dueDate)??9999)-(dl(b.dueDate)??9999);});
+  // Hide delivered from default view
+  if(filterMode==='delivered') list=list.filter(p=>p.delivered);
+  else list=list.filter(p=>!p.delivered); // never show delivered in other filters
   if(filterMode==='overdue')list=list.filter(p=>urgency(p)==='overdue');
   else if(filterMode==='week')list=list.filter(p=>urgency(p)==='urgent');
   else if(filterMode==='nowo')list=list.filter(p=>p.parts.filter(pt=>pt.status==='nowo').length>0);
@@ -898,6 +1005,7 @@ function renderDash(){
   document.getElementById('s-prog').textContent=all.filter(pt=>['inprogress','paused'].includes(pt.status)).length;
   document.getElementById('s-out').textContent=all.filter(pt=>pt.status==='outside').length;
   document.getElementById('s-done').textContent=all.filter(pt=>pt.status==='done').length;
+  document.getElementById('s-delivered').textContent=projects.filter(p=>p.delivered).length;
   const list=filtered(),con=document.getElementById('dash-list');
   if(!list.length){con.innerHTML=`<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:15px">${!projects.length?'No data yet':'No matches'}</div></div>`;return;}
   con.innerHTML=list.map(p=>{
@@ -956,15 +1064,11 @@ function renderProg(){
     const[dlTxt,dcc]=dueChip(d,p.dueStr);
     const{done,tot}=prog(p);const dhc=p.dateHistory?.length||0;
     const pct=tot?Math.round(done/tot*100):0;
-    const editBtns=canEdit()?`<span style="margin-left:8px;display:inline-flex;gap:3px">
-      <button class="lbtn" onclick="openEditLoad('${p.id}');event.stopPropagation()" style="color:var(--blue);border-color:var(--blue-dim)">✎</button>
-      <button class="lbtn" onclick="openAddPart('${p.id}','programming');event.stopPropagation()" style="color:var(--green);border-color:var(--green-dim)">+ Part</button>
-      <button class="lbtn" onclick="deleteLoad('${p.id}');event.stopPropagation()" style="color:var(--red);border-color:var(--red-dim)">✕</button>
-    </span>`:'';
-    html+=`<tr class="grow" style="cursor:pointer" onclick="toggleLoad('${p.id}')">
+    const editBtns=canEdit()?ddLoad(p.id):'';
+    html+=`<tr id="pcard-${p.id}" data-pid="${p.id}" class="grow" style="cursor:pointer" onclick="toggleLoad('${p.id}')">
       <td><span style="color:var(--muted);font-size:10px">${chev}</span></td>
       <td><span class="cbadge ${cbadge(p.client)}">${p.client}</span></td>
-      <td colspan="2"><strong>${p.projectName}</strong>${dhc?` <button class="dh-btn" onclick="showDH(event,'${p.id}')" style="margin-left:6px">${dhc}x</button>`:''}${editBtns}</td>
+      <td colspan="2"><strong>${p.projectName}</strong>${dhc?` <button class="dh-btn" onclick="showDH(event,'${p.id}')" style="margin-left:6px">${dhc}x</button>`:''}<span onclick="event.stopPropagation()" style="margin-left:8px">${editBtns}</span></td>
       <td><span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span></td>
       <td style="font-size:10px;color:var(--muted)">${done}/${tot} (${pct}%)</td>
       <td></td><td></td><td></td><td></td>
@@ -974,17 +1078,13 @@ function renderProg(){
         const stOpts=[['nowo','No W/O'],['drawing','Drawing OK'],['inprogress','In Progress'],['paused','Paused'],['done','Done'],['outside','Outside']].map(([v,l])=>`<option value="${v}" ${pt.status===v?'selected':''}>${l}</option>`).join('');
         const aopts=`<option value="">— Unassigned —</option>`+users.map(u=>`<option value="${u.name}" ${pt.assignedTo===u.name?'selected':''}>${u.name}</option>`).join('');
         const showLog=logOpenIds.has(pt.id),lc=(pt.log||[]).length;
-        const partEditBtns=canEdit()?`<td style="white-space:nowrap">
-          <button class="lbtn" onclick="openEditPart('${p.id}','${pt.id}','programming')" style="color:var(--blue);border-color:var(--blue-dim)">✎</button>
-          <button class="lbtn" onclick="deletePart('${p.id}','${pt.id}')" style="color:var(--red);border-color:var(--red-dim);margin-left:2px">✕</button>
-        </td>`:'<td></td>';
-        html+=`<tr class="${pt.status==='nowo'?'nwrow':''}">
+        const partEditBtns=canEdit()?`<td>${ddPart(p.id,pt.id)}</td>`:'<td></td>';
+        html+=`<tr id="ppart-${pt.id}" data-partid="${pt.id}" class="${pt.status==='nowo'?'nwrow':''}">
           <td><span class="wo">${pt.wo||'—'}</span></td>
           <td><span class="cbadge ${cbadge(p.client)}" style="opacity:.4;font-size:9px">${p.client}</span></td>
           <td style="color:var(--muted);font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.projectName}</td>
           <td style="font-size:12px">${pt.desc}</td>
-          <td></td>
-          <td><select class="msel" onchange="setStatus('${p.id}','${pt.id}',this.value)">${stOpts}</select></td>
+          <td>${(()=>{const d=dl(p.dueDate);const[dlTxt,dcc]=dueChip(d,p.dueStr);return`<span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span>`;})()}</td>
           <td><select class="msel ${pt.assignedTo?'asgn':''}" onchange="assignPt('${p.id}','${pt.id}',this.value)">${aopts}</select></td>
           <td><input class="notes-inp" value="${(pt.notes||'').replace(/"/g,'&quot;')}" placeholder="Add note..." onchange="saveNotes('${p.id}','${pt.id}',this.value)"></td>
           <td><button class="lbtn" onclick="toggleLog('${pt.id}')">${showLog?'Hide':'Log'}${lc?` (${lc})`:''}</button></td>
@@ -1018,32 +1118,30 @@ function renderSchedule(){
       const woRows=p.parts.map(pt=>{
         const ptDue=pt.dueDate&&pt.dueStr&&pt.dueStr!==p.dueStr?pt.dueStr:null;
         const[ptDlTxt,ptDcc]=ptDue?dueChip(dl(pt.dueDate),ptDue):['',''];
-        return`<div style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px">
+        return`<div id="spart-${pt.id}" data-partid="${pt.id}" style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px">
           <span class="wo" style="min-width:85px;flex-shrink:0">${pt.wo||'—'}</span>
           <span style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pt.desc}</span>
           ${ptDue?`<span class="due-chip ${ptDcc}" style="font-size:10px;flex-shrink:0">${ptDlTxt} <span style="font-size:9px;color:var(--muted)">own date</span></span>`:''}
           <div style="flex-shrink:0">${sbadge(pt.status)}</div>
-          <div style="display:flex;gap:4px;flex-shrink:0">
-            <button class="lbtn" onclick="openEditWO('${p.id}','${pt.id}')" style="color:var(--blue);border-color:var(--blue-dim)">✎ Edit</button>
-            <button class="lbtn" onclick="openMoveWO('${p.id}','${pt.id}')" style="color:var(--amber);border-color:var(--amber-dim)">⇄ Move</button>
-            <button class="lbtn" onclick="deletePart('${p.id}','${pt.id}')" style="color:var(--red);border-color:var(--red-dim)">✕</button>
-          </div>
+          <div style="flex-shrink:0">${ddSchedPart(p.id,pt.id)}</div>
         </div>`;
       }).join('')||`<div style="padding:10px 14px;font-size:11px;color:var(--muted)">No W/Os yet. Click "+ W/O" to add.</div>`;
-      return`<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:8px;border-left:3px solid ${kc}">
+      const cardBorder=p.delivered?'var(--green)':kc;
+      return`<div id="scard-${p.id}" data-pid="${p.id}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:8px;border-left:3px solid ${cardBorder};${p.delivered?'opacity:.75':''}">
         <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer" onclick="toggleSchedLoad('${p.id}')" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
           <span style="color:var(--muted);font-size:10px;flex-shrink:0">${chev}</span>
           <span class="cbadge ${cbadge(p.client)}">${p.client}</span>
           <div style="flex:1;min-width:0">
-            <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${p.projectName}</div>
+            <div style="font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:flex;align-items:center;gap:7px">
+              ${p.projectName}
+              ${p.delivered?`<span class="sbadge s-done" style="font-size:9px">Delivered ${p.deliveredAt?new Date(p.deliveredAt).toLocaleDateString('en-CA',{month:'short',day:'numeric'}):''}</span>`:''}
+            </div>
             <div style="font-size:11px;color:var(--muted);margin-top:2px">${tot} W/O${tot!==1?'s':''} · ${done} done${nowoN?` · <span style="color:var(--red)">${nowoN} no W/O</span>`:''}</div>
           </div>
           <span class="due-chip ${dcc}" style="font-size:10px;flex-shrink:0">${dlTxt}</span>
-          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0" onclick="event.stopPropagation()">
+          <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
             <span style="font-size:10px;color:${pct===100?'var(--green)':pct>50?'var(--amber)':'var(--muted)'}">${pct}%</span>
-            <button class="lbtn" onclick="openEditLoad('${p.id}')" style="color:var(--blue);border-color:var(--blue-dim)">✎</button>
-            <button class="lbtn" onclick="openAddPart('${p.id}')" style="color:var(--green);border-color:var(--green-dim)">+ W/O</button>
-            <button class="lbtn" onclick="deleteLoad('${p.id}')" style="color:var(--red);border-color:var(--red-dim)">✕</button>
+            ${ddSchedLoad(p.id)}
           </div>
         </div>
         ${isCol?'':woRows}
@@ -1128,17 +1226,35 @@ function renderMyWork(){
   });
   updateAWP();
 }
+let analyticsPeriod='all';
+function setAnalyticsPeriod(p,btn){
+  analyticsPeriod=p;
+  document.querySelectorAll('[id^="ap-"]').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderAnalytics();
+}
 function renderAnalytics(){
+  const cutoff=analyticsPeriod==='all'?0:Date.now()-(analyticsPeriod*86400000);
   const all=projects.flatMap(p=>p.parts.map(pt=>({...pt,projectName:p.projectName,client:p.client,dueDate:p.dueDate})));
   const byPerson={};
   all.forEach(pt=>{
     if(!pt.assignedTo)return;
     if(!byPerson[pt.assignedTo])byPerson[pt.assignedTo]={done:0,inprogress:0,paused:0,drawing:0,normalTime:0,revisionTime:0,pauses:0,revisions:0};
     byPerson[pt.assignedTo][pt.status]=(byPerson[pt.assignedTo][pt.status]||0)+1;
-    if(pt.log){const{normal,revision}=timeBreakdown(pt.log);byPerson[pt.assignedTo].normalTime+=normal;byPerson[pt.assignedTo].revisionTime+=revision;byPerson[pt.assignedTo].pauses+=pauseCnt(pt);byPerson[pt.assignedTo].revisions+=revCnt(pt);}
+    if(pt.log){
+      const filteredLog=pt.log.filter(e=>e.ts>=cutoff);
+      const{normal,revision}=timeBreakdown(filteredLog);
+      byPerson[pt.assignedTo].normalTime+=normal;
+      byPerson[pt.assignedTo].revisionTime+=revision;
+      byPerson[pt.assignedTo].pauses+=filteredLog.filter(e=>e.action==='paused').length;
+      byPerson[pt.assignedTo].revisions+=filteredLog.filter(e=>e.action==='reopened').length;
+    }
   });
   const pauseR={};
-  all.forEach(pt=>{(pt.log||[]).filter(e=>e.action==='paused'&&e.reason).forEach(e=>{pauseR[e.reason]=(pauseR[e.reason]||0)+1;});});
+  all.forEach(pt=>{
+    (pt.log||[]).filter(e=>e.action==='paused'&&e.reason&&e.ts>=cutoff)
+      .forEach(e=>{pauseR[e.reason]=(pauseR[e.reason]||0)+1;});
+  });
   const totalP=Object.values(pauseR).reduce((a,b)=>a+b,0);
   const dateChanges=projects.filter(p=>p.dateHistory?.length).map(p=>({projectName:p.projectName,client:p.client,changes:p.dateHistory.length})).sort((a,b)=>b.changes-a.changes);
   const now=new Date();now.setHours(0,0,0,0);const we=new Date(now);we.setDate(we.getDate()+7);
@@ -1169,6 +1285,28 @@ function renderAnalytics(){
       <div class="acard"><div class="acard-title">Pause Reasons</div>${reasonsHTML}</div>
       <div class="acard"><div class="acard-title">Most Rescheduled</div>${dateHTML}</div>
     </div>`;
+}
+function exportAnalytics(){
+  const rows=[['Client','Load','W/O','Description','Status','Assigned To','Work Time (min)','Revision Time (min)','Pauses','Reopens','Due Date']];
+  projects.forEach(p=>{
+    p.parts.forEach(pt=>{
+      const{normal,revision}=timeBreakdown(pt.log||[]);
+      rows.push([
+        p.client,p.projectName,pt.wo||'',pt.desc,
+        pt.status,pt.assignedTo||'',
+        Math.round(normal/60000),Math.round(revision/60000),
+        pauseCnt(pt),revCnt(pt),
+        p.dueStr||''
+      ]);
+    });
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob([csv],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=`ve-analytics-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  toast('Analytics exported ✓');
 }
 function saveCap(wk,name,val){const cap=JSON.parse(localStorage.getItem('ve_cap')||'{}');if(!cap[wk])cap[wk]={};cap[wk][name]=parseInt(val)||0;localStorage.setItem('ve_cap',JSON.stringify(cap));toast('Capacity saved');}
 
@@ -1428,7 +1566,7 @@ function saveUsers(){
 }
 function setView(v){
   ['dashboard','schedule','programming','mywork','analytics'].forEach(id=>{const el=document.getElementById('view-'+id);if(el)el.style.display=id===v?'':'none';const btn=document.getElementById('nav-'+id);if(btn)btn.classList.toggle('active',id===v);});
-  if(v==='mywork')renderMyWork();if(v==='programming')renderProg();if(v==='analytics')renderAnalytics();if(v==='schedule')renderSchedule();
+  if(v==='mywork'){renderMyWork();markMyWorkSeen();}if(v==='programming')renderProg();if(v==='analytics')renderAnalytics();if(v==='schedule')renderSchedule();
 }
 function setFilter(f,btn){filterMode=f;document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDash();}
 function doSearch(v){searchStr=v;renderDash();}
@@ -1438,6 +1576,45 @@ function openGSearch(){
   openMod('gsearch');
   setTimeout(()=>{const el=document.getElementById('gsearch-inp');if(el){el.value='';el.focus();}runGSearch();},50);
 }
+function navigateTo(type, pid, partId){
+  closeMod('gsearch');
+  // Stay on current tab if user is already on a valid one, else pick best
+  const perms=getPerms(currentUser);
+  const currentTab=document.querySelector('nav button.active')?.id?.replace('nav-','');
+  const targetTab=currentTab&&perms.tabs.includes(currentTab)?currentTab
+    :(perms.tabs.includes('schedule')?'schedule':(perms.tabs.includes('programming')?'programming':'dashboard'));
+
+  setView(targetTab);
+
+  setTimeout(()=>{
+    collapsedLoads.delete('sched-'+pid);
+    collapsedLoads.delete(pid); // also expand in programming view
+    // Re-render the active view
+    if(targetTab==='schedule')renderSchedule();
+    else if(targetTab==='programming')renderProg();
+    else renderDash();
+    setTimeout(()=>{
+      // Try to find and scroll to the specific element
+      const el=
+        (partId&&document.getElementById('spart-'+partId))||
+        (partId&&document.getElementById('ppart-'+partId))||
+        (partId&&document.querySelector(`[data-partid="${partId}"]`))||
+        document.getElementById('scard-'+pid)||
+        document.getElementById('pcard-'+pid)||
+        document.querySelector(`[data-pid="${pid}"]`);
+      if(el){el.scrollIntoView({behavior:'smooth',block:'center'});flashEl(el);}
+    },120);
+  },80);
+}
+
+function flashEl(el){
+  el.style.transition='box-shadow .15s';
+  el.style.boxShadow='0 0 0 2px var(--amber)';
+  setTimeout(()=>{el.style.boxShadow='0 0 0 0px var(--amber)';},600);
+  setTimeout(()=>{el.style.boxShadow='0 0 0 2px var(--amber)';},900);
+  setTimeout(()=>{el.style.boxShadow='';el.style.transition='';},1400);
+}
+
 function runGSearch(){
   const q=(document.getElementById('gsearch-inp')?.value||'').toLowerCase().trim();
   const con=document.getElementById('gsearch-results');
@@ -1451,20 +1628,163 @@ function runGSearch(){
   con.innerHTML=results.slice(0,15).map(r=>{
     const p=r.p,pt=r.pt;const due=pt?.dueDate||p.dueDate;const dueStr=pt?.dueStr||p.dueStr;
     const dd=dl(due);const[dlTxt,dcc]=dueChip(dd,dueStr);
-    if(r.type==='load'){const{done,tot}=prog(p);
-      return`<div class="nitem" onclick="closeMod('gsearch');setView('schedule')" style="margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:8px"><span class="cbadge ${cbadge(p.client)}">${p.client}</span>
-        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:600">${p.projectName}</div><div style="font-size:10px;color:var(--muted)">Load · ${tot} W/Os · ${done} done</div></div>
-        <span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span></div></div>`;}
-    else{const assigned=pt.assignedTo?`<span class="pchip ${uc(pt.assignedTo)}">${pt.assignedTo}</span>`:'';
-      return`<div class="nitem" onclick="closeMod('gsearch');setView('programming')" style="margin-bottom:4px">
-        <div style="display:flex;align-items:center;gap:8px"><span class="wo" style="flex-shrink:0;min-width:75px">${pt.wo||'—'}</span>
-        <div style="flex:1;min-width:0"><div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pt.desc}</div>
-        <div style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:2px"><span class="cbadge ${cbadge(p.client)}" style="font-size:9px">${p.client}</span><span>${p.projectName}</span>${assigned}</div></div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">${sbadge(pt.status)}<span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span></div></div></div>`;}
+    if(r.type==='load'){
+      const{done,tot}=prog(p);
+      return`<div class="nitem" onclick="navigateTo('load','${p.id}',null)" style="margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="cbadge ${cbadge(p.client)}">${p.client}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:600">${p.projectName}</div>
+            <div style="font-size:10px;color:var(--muted)">Load · ${tot} W/Os · ${done} done</div>
+          </div>
+          <span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span>
+        </div>
+      </div>`;
+    } else {
+      const assigned=pt.assignedTo?`<span class="pchip ${uc(pt.assignedTo)}">${pt.assignedTo}</span>`:'';
+      return`<div class="nitem" onclick="navigateTo('part','${p.id}','${pt.id}')" style="margin-bottom:4px">
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="wo" style="flex-shrink:0;min-width:75px">${pt.wo||'—'}</span>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:12px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${pt.desc}</div>
+            <div style="font-size:10px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-top:2px">
+              <span class="cbadge ${cbadge(p.client)}" style="font-size:9px">${p.client}</span>
+              <span>${p.projectName}</span>${assigned}
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex-shrink:0">
+            ${sbadge(pt.status)}<span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span>
+          </div>
+        </div>
+      </div>`;
+    }
   }).join('');
 }
 document.addEventListener('keydown',e=>{if((e.ctrlKey||e.metaKey)&&e.key==='k'){e.preventDefault();openGSearch();}if(e.key==='Escape')closeMod('gsearch');});
+function toggleDD(id,e){
+  e.stopPropagation();
+  // Close all other open dropdowns first
+  document.querySelectorAll('.ddmenu.open').forEach(m=>{if(m.id!==id)m.classList.remove('open');});
+  document.getElementById(id)?.classList.toggle('open');
+}
+document.addEventListener('click',()=>document.querySelectorAll('.ddmenu.open').forEach(m=>m.classList.remove('open')));
+
+function ddLoad(pid){
+  const bulkOpts=users.filter(u=>u.role==='programmer'||u.role==='manager')
+    .map(u=>`<button class="dditem" onclick="bulkAssign('${pid}','${u.name}');this.closest('.ddmenu').classList.remove('open')">👤 Assign all to ${u.name}</button>`).join('');
+  return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-l-${pid}',event)">⋯</button><div class="ddmenu" id="dd-l-${pid}">
+    <button class="dditem blue" onclick="openEditLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✎ Edit load</button>
+    <button class="dditem green" onclick="openAddPart('${pid}','programming');this.closest('.ddmenu').classList.remove('open')">+ Add part</button>
+    <div class="dd-divider"></div>
+    ${bulkOpts}
+    <div class="dd-divider"></div>
+    <button class="dditem red" onclick="deleteLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✕ Delete load</button>
+  </div></div>`;
+}
+function bulkAssign(pid,name){
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  const now=Date.now();
+  p.parts.forEach(pt=>{
+    if(!['done','outside'].includes(pt.status)){
+      pt.assignedTo=name;pt.assignedAt=now;
+    }
+  });
+  save();renderProg();setupNav();toast(`All parts in "${p.projectName}" assigned to ${name}`);
+}
+function ddPart(pid,partId){
+  return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-p-${partId}',event)">⋯</button><div class="ddmenu" id="dd-p-${partId}">
+    <button class="dditem blue" onclick="openEditPart('${pid}','${partId}','programming');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
+    <div class="dd-divider"></div>
+    <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
+  </div></div>`;
+}
+function ddSchedLoad(pid){
+  const p=projects.find(x=>x.id===pid);
+  const isDelivered=p?.delivered;
+  return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-sl-${pid}',event)">⋯</button><div class="ddmenu" id="dd-sl-${pid}">
+    ${!isDelivered?`
+    <button class="dditem blue" onclick="openEditLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✎ Edit load</button>
+    <button class="dditem green" onclick="openAddPart('${pid}');this.closest('.ddmenu').classList.remove('open')">+ Add W/O</button>
+    <div class="dd-divider"></div>
+    <button class="dditem green" onclick="openDeliverLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✓ Mark as Delivered</button>
+    <div class="dd-divider"></div>
+    <button class="dditem red" onclick="deleteLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✕ Delete load</button>
+    `:`
+    <button class="dditem amber" onclick="openReopenLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">↩ Reopen</button>
+    <div class="dd-divider"></div>
+    <button class="dditem red" onclick="deleteLoad('${pid}');this.closest('.ddmenu').classList.remove('open')">✕ Delete load</button>
+    `}
+  </div></div>`;
+}
+
+// ── DELIVER & REOPEN LOAD ─────────────────────────────────────────────────────
+function openDeliverLoad(pid){
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  document.getElementById('deliver-pid').value=pid;
+  document.getElementById('deliver-sub').textContent=`${p.client} · ${p.projectName}`;
+  const pending=p.parts.filter(pt=>!['done','outside'].includes(pt.status));
+  const pendSec=document.getElementById('deliver-pending-section');
+  const goodSec=document.getElementById('deliver-allgood');
+  if(pending.length){
+    pendSec.style.display='';goodSec.style.display='none';
+    // Clear radio selection
+    document.querySelectorAll('input[name="dp-choice"]').forEach(r=>r.checked=false);
+    document.getElementById('deliver-pending-list').innerHTML=
+      pending.map(pt=>`<div style="padding:3px 0;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px">
+        <span class="wo">${pt.wo||'—'}</span>
+        <span style="flex:1">${pt.desc}</span>
+        ${sbadge(pt.status)}
+      </div>`).join('');
+  }else{
+    pendSec.style.display='none';goodSec.style.display='';
+  }
+  openMod('deliver');
+}
+function confirmDeliver(){
+  const pid=document.getElementById('deliver-pid').value;
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  const pending=p.parts.filter(pt=>!['done','outside'].includes(pt.status));
+  if(pending.length){
+    const choice=document.querySelector('input[name="dp-choice"]:checked')?.value;
+    if(!choice){toast('Please choose what to do with pending W/Os');return;}
+    if(choice==='done')pending.forEach(pt=>pt.status='done');
+    else if(choice==='outside')pending.forEach(pt=>pt.status='outside');
+    // 'keep' → do nothing
+  }
+  p.delivered=true;
+  p.deliveredAt=Date.now();
+  p.deliveredBy=currentUser?.name||'system';
+  if(!p.deliveryHistory)p.deliveryHistory=[];
+  p.deliveryHistory.push({action:'delivered',at:p.deliveredAt,by:p.deliveredBy});
+  save();closeMod('deliver');render();renderSchedule();renderSummary();
+  toast(`"${p.projectName}" marked as Delivered ✓`);
+}
+function openReopenLoad(pid){
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  document.getElementById('reopen-load-pid').value=pid;
+  document.getElementById('reopen-load-sub').textContent=`${p.client} · ${p.projectName}`;
+  document.getElementById('reopen-load-reason').value='';
+  openMod('reopen-load');
+}
+function confirmReopenLoad(){
+  const pid=document.getElementById('reopen-load-pid').value;
+  const reason=(document.getElementById('reopen-load-reason').value||'').trim();
+  if(!reason){toast('Please enter a reason');return;}
+  const p=projects.find(x=>x.id===pid);if(!p)return;
+  p.delivered=false;
+  if(!p.deliveryHistory)p.deliveryHistory=[];
+  p.deliveryHistory.push({action:'reopened',at:Date.now(),by:currentUser?.name||'system',reason});
+  save();closeMod('reopen-load');render();renderSchedule();renderSummary();
+  toast(`"${p.projectName}" reopened`);
+}
+function ddSchedPart(pid,partId){
+  return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-sp-${partId}',event)">⋯</button><div class="ddmenu" id="dd-sp-${partId}">
+    <button class="dditem blue" onclick="openEditWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
+    <button class="dditem amber" onclick="openMoveWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">⇄ Move to load</button>
+    <div class="dd-divider"></div>
+    <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
+  </div></div>`;
+}
 function toggleTheme(){
   const isLight=document.body.classList.toggle('light');
   document.querySelectorAll('.theme-toggle').forEach(b=>b.textContent=isLight?'🌑':'🌙');

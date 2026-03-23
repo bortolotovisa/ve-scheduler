@@ -1,23 +1,16 @@
 {
-  "name": "VE Programming Scheduler",
-  "short_name": "VE Scheduler",
-  "description": "Visual Elements — Programming & Shop Floor Scheduler",
+  "name": "VE Scheduler",
+  "short_name": "VE",
+  "description": "Visual Elements Programming Scheduler",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0c0c0c",
-  "theme_color": "#EF9F27",
-  "orientation": "any",
+  "background_color": "#080808",
+  "theme_color": "#F0A020",
   "icons": [
     {
-      "src": "/icons/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "/icons/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any maskable"
     }
   ]
