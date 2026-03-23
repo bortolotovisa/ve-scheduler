@@ -4,6 +4,11 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>VE Scheduler</title>
+<meta name="theme-color" content="#080808">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="VE Scheduler">
+<link rel="manifest" href="/manifest.json">
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap');
 :root{
@@ -332,6 +337,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       <div class="hdr-user" id="hdr-user"></div>
       <button class="hdr-btn" id="team-btn" style="display:none" onclick="openMod('team')">⚙ Team</button>
       <label class="hdr-btn" id="import-hdr-btn" style="display:none;cursor:pointer">⬆ Import CSV<input type="file" accept=".csv" style="display:none" onchange="importFile(event)"></label>
+      <button class="hdr-btn" id="install-btn" style="display:none;color:var(--amber);border-color:var(--amber-dim)" onclick="promptInstall()">⬇ Install App</button>
       <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
       <button class="hdr-btn" onclick="doLogout()">Sign Out</button>
     </div>
@@ -418,7 +424,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 <div class="moverlay" id="mod-dh" onclick="if(event.target===this)closeMod('dh')">
   <div class="modal"><div class="modal-title" id="dh-title">Date History</div><div class="modal-sub">All due date changes recorded.</div><div id="dh-body"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeMod('dh')">Close</button></div></div>
 </div>
-<div class="moverlay" id="mod-pause">
+<div class="moverlay" id="mod-pause" onclick="if(event.target===this)cancelPauseModal()">
   <div class="modal" style="max-width:420px">
     <div class="modal-title" id="pause-modal-title">Pause</div>
     <div class="modal-sub" id="pause-modal-sub" style="margin-bottom:12px"></div>
@@ -692,6 +698,7 @@ function doLogout(){
   currentUser=null;clearAllTimers();
   if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
   document.getElementById('awp').classList.remove('show');
+  const badge=document.getElementById('paused-badge');if(badge)badge.remove();
   document.getElementById('app').style.display='none';
   document.getElementById('login-page').classList.add('show');
   populateLogin();
@@ -876,8 +883,22 @@ function updatePt(pid,partId,changes){
 function startPt(pid,partId){updatePt(pid,partId,{status:'inprogress',log:logEvt('started')});render();renderMyWork();updateAWP();toast('Started ▶');}
 function pausePt(pid,partId,reason,nextId){
   updatePt(pid,partId,{status:'paused',log:logEvt('paused',reason)});
-  if(nextId){let np=null;projects.forEach(p=>{if(p.parts.find(pt=>pt.id===nextId))np=p.id;});if(np)updatePt(np,nextId,{status:'inprogress',log:logEvt('started','switched from previous part')});}
-  selectedNext=null;pauseOpenId=null;render();renderMyWork();updateAWP();toast('Paused ⏸');
+  if(nextId){
+    let np=null;
+    projects.forEach(p=>{if(p.parts.find(pt=>pt.id===nextId))np=p.id;});
+    if(np){
+      // Also assign to current user if not already — so AWP can find it
+      const nextPt=projects.find(p=>p.id===np)?.parts.find(pt=>pt.id===nextId);
+      if(nextPt&&!nextPt.assignedTo){
+        nextPt.assignedTo=currentUser?.name||null;
+        nextPt.assignedAt=Date.now();
+      }
+      updatePt(np,nextId,{status:'inprogress',log:logEvt('started','switched from previous part')});
+    }
+  }
+  selectedNext=null;
+  if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
+  render();renderMyWork();updateAWP();toast('Paused ⏸');
 }
 function resumePt(pid,partId){updatePt(pid,partId,{status:'inprogress',log:logEvt('resumed')});render();renderMyWork();updateAWP();toast('Resumed ▶');}
 function donePt(pid,partId){updatePt(pid,partId,{status:'done',log:logEvt('done')});render();renderMyWork();renderSummary();updateAWP();toast('Done ✓');}
@@ -907,7 +928,12 @@ function selPauseR(btn){
 }
 function getPauseR(){
   const s=document.querySelector('#pause-ropts .rpill.sel');if(!s)return'';
-  if(s.textContent==='Other')return document.getElementById('pause-rother').value||'Other';
+  if(s.textContent==='Other'){
+    const txt=(document.getElementById('pause-rother').value||'').trim();
+    // Bug 6: require actual text for Other
+    if(!txt){toast('Please describe the reason');return'';}
+    return txt;
+  }
   return s.textContent;
 }
 function filterNextModal(){
@@ -915,20 +941,44 @@ function filterNextModal(){
   const con=document.getElementById('pause-nresults');if(!con)return;
   let cands=[];
   projects.forEach(p=>{p.parts.forEach(pt=>{
-    if(pt.id===pauseModalPartId||['done','outside','nowo'].includes(pt.status))return;
+    // Bug 2: exclude inprogress (already being worked on by someone else)
+    // Bug 3: only show parts assigned to current user OR unassigned
+    if(pt.id===pauseModalPartId)return;
+    if(['done','outside','nowo','inprogress'].includes(pt.status))return;
+    if(pt.assignedTo&&pt.assignedTo!==currentUser?.name)return;
     cands.push({...pt,projectName:p.projectName,client:p.client,pid:p.id});
   });});
+  // Sort: assigned to me first, then unassigned
+  cands.sort((a,b)=>{
+    const am=a.assignedTo===currentUser?.name,bm=b.assignedTo===currentUser?.name;
+    if(am&&!bm)return -1;if(!am&&bm)return 1;return 0;
+  });
   if(q)cands=cands.filter(pt=>pt.desc.toLowerCase().includes(q)||pt.wo.toLowerCase().includes(q)||pt.client.toLowerCase().includes(q));
-  if(!cands.length){con.innerHTML=`<div style="font-size:11px;color:var(--muted);padding:6px 0;text-align:center">No parts found</div>`;return;}
-  con.innerHTML=cands.slice(0,6).map(pt=>`<div class="nitem ${selectedNext===pt.id?'nsel':''}" onclick="selNextModal('${pt.id}')">
+  if(!cands.length){
+    con.innerHTML=`<div style="font-size:11px;color:var(--muted);padding:6px 0;text-align:center">No parts available to switch to</div>`;
+    return;
+  }
+  con.innerHTML=cands.slice(0,8).map(pt=>`<div class="nitem ${selectedNext===pt.id?'nsel':''}" onclick="selNextModal('${pt.id}')">
     <div class="nitem-name">${pt.desc}</div>
-    <div class="nitem-meta">${pt.client} · ${pt.projectName} · ${pt.wo||'No W/O'}</div>
+    <div class="nitem-meta">${pt.client} · ${pt.projectName} · ${pt.wo||'No W/O'} · ${SL[pt.status]||'?'}${pt.assignedTo===currentUser?.name?' · <span style="color:var(--amber)">Mine</span>':''}</div>
   </div>`).join('');
 }
 function selNextModal(partId){selectedNext=selectedNext===partId?null:partId;filterNextModal();}
+function cancelPauseModal(){
+  // Fully reset pause state before closing
+  pauseModalPid=null;pauseModalPartId=null;selectedNext=null;pauseOpenId=null;
+  document.getElementById('pause-ropts').innerHTML='';
+  document.getElementById('pause-rother').value='';
+  document.getElementById('pause-rother').style.display='none';
+  document.getElementById('pause-nsearch').value='';
+  document.getElementById('pause-nresults').innerHTML='';
+  closeMod('pause');
+}
 function confirmPauseModal(){
   const r=getPauseR();if(!r){toast('Please select a reason');return;}
-  closeMod('pause');pausePt(pauseModalPid,pauseModalPartId,r,selectedNext);
+  const pid=pauseModalPid,partId=pauseModalPartId,next=selectedNext;
+  cancelPauseModal(); // reset state before side-effects
+  pausePt(pid,partId,r,next);
 }
 function openReopen(pid,partId){reopenOpenId=partId;pauseOpenId=null;renderMyWork();}
 function cancelReopen(){reopenOpenId=null;renderMyWork();}
@@ -1471,24 +1521,76 @@ function confirmEditWO(){
   save();closeMod('editwo');render();renderSchedule();renderSummary();toast('W/O updated ✓');
 }
 function updateAWP(){
-  if(!currentUser||currentUser.role==='guest'){document.getElementById('awp').classList.remove('show');return;}
+  if(!currentUser||currentUser.role==='guest'){
+    document.getElementById('awp').classList.remove('show');
+    updatePausedBadge(null);
+    return;
+  }
+
+  // Find active (inprogress) part for current user
   let apt=null,apid=null,aproj=null;
-  for(const p of projects){const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='inprogress');if(pt){apt=pt;apid=p.id;aproj=p;break;}}
-  if(!apt)for(const p of projects){const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='paused');if(pt){apt=pt;apid=p.id;aproj=p;break;}}
+  for(const p of projects){
+    const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='inprogress');
+    if(pt){apt=pt;apid=p.id;aproj=p;break;}
+  }
+
   const popup=document.getElementById('awp');
-  if(!apt){popup.classList.remove('show');if(awpTimer){clearInterval(awpTimer);awpTimer=null;}return;}
+
+  // Find paused part separately for the header badge
+  let pausedPt=null,pausedProj=null,pausedPid=null;
+  for(const p of projects){
+    const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='paused');
+    if(pt){pausedPt=pt;pausedProj=p;pausedPid=p.id;break;}
+  }
+  updatePausedBadge(pausedPt?{pt:pausedPt,pid:pausedPid,proj:pausedProj}:null);
+
+  // AWP only shows when actively working
+  if(!apt){
+    popup.classList.remove('show');
+    if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
+    return;
+  }
+
   popup.classList.add('show');
-  const isPaused=apt.status==='paused';const lastReason=(apt.log||[]).slice().reverse().find(e=>e.action==='paused')?.reason||'';
-  popup.style.borderLeftColor=isPaused?'#c09020':'var(--amber)';popup.style.borderColor=isPaused?'#6a5000':'var(--amber-dim)';
+  popup.style.borderLeftColor='var(--amber)';
+  popup.style.borderColor='var(--amber-dim)';
+
   document.getElementById('awp-part').textContent=apt.desc;
-  document.getElementById('awp-proj').textContent=`${aproj.client} · ${aproj.projectName}${isPaused&&lastReason?' · Paused: '+lastReason:''}`;
+  document.getElementById('awp-proj').textContent=`${aproj.client} · ${aproj.projectName}`;
+
   const pauseBtn=document.getElementById('awp-pause'),doneBtn=document.getElementById('awp-done');
-  if(isPaused){pauseBtn.textContent='▶ Resume';pauseBtn.className='abtn a-resume';pauseBtn.onclick=()=>resumePt(apid,apt.id);doneBtn.style.display='none';}
-  else{pauseBtn.textContent='⏸ Pause';pauseBtn.className='abtn a-pause';pauseBtn.onclick=()=>openPause(apid,apt.id);doneBtn.style.display='';doneBtn.onclick=()=>donePt(apid,apt.id);}
-  if(awpTimer)clearInterval(awpTimer);
-  const{total:s0}=timeBreakdown(apt.log||[]);const w0=Date.now();
-  function tick(){const el=document.getElementById('awp-time');if(el)el.textContent=isPaused?'Paused':fmtDur(s0+(Date.now()-w0));}
-  tick();awpTimer=isPaused?null:setInterval(tick,1000);
+  pauseBtn.textContent='⏸ Pause';pauseBtn.className='abtn a-pause';
+  pauseBtn.onclick=()=>openPause(apid,apt.id);
+  doneBtn.style.display='';doneBtn.onclick=()=>donePt(apid,apt.id);
+
+  // Recalculate time fresh from saved log
+  if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
+  // Re-read the part from projects to get the latest log (after all updates)
+  const freshPt=projects.find(p=>p.id===apid)?.parts.find(pt=>pt.id===apt.id)||apt;
+  const savedTotal=timeBreakdown(freshPt.log||[]).total;
+  const w0=Date.now();
+  function tick(){
+    const el=document.getElementById('awp-time');
+    if(el)el.textContent=fmtDur(savedTotal+(Date.now()-w0));
+  }
+  tick();
+  awpTimer=setInterval(tick,1000);
+}
+
+function updatePausedBadge(data){
+  let badge=document.getElementById('paused-badge');
+  if(!data){if(badge)badge.remove();return;}
+  if(!badge){
+    badge=document.createElement('div');
+    badge.id='paused-badge';
+    badge.style.cssText='display:flex;align-items:center;gap:7px;padding:4px 10px;background:var(--surface2);border:1px solid #604000;border-radius:var(--r4);font-size:11px;color:#b07820;font-family:var(--cond);font-weight:600;letter-spacing:.3px;cursor:pointer;white-space:nowrap;';
+    badge.title='Click to resume';
+    const hdrRight=document.getElementById('hdr-user')?.parentElement;
+    if(hdrRight)hdrRight.insertBefore(badge,hdrRight.firstChild);
+  }
+  const reason=(data.pt.log||[]).slice().reverse().find(e=>e.action==='paused')?.reason||'';
+  badge.innerHTML=`⏸ <span style="max-width:160px;overflow:hidden;text-overflow:ellipsis">${data.pt.desc}${reason?` · ${reason}`:''}</span>`;
+  badge.onclick=()=>resumePt(data.pid,data.pt.id);
 }
 function openMod(id){document.getElementById('mod-'+id).classList.add('open');if(id==='team')renderUsers();}
 function closeMod(id){document.getElementById('mod-'+id).classList.remove('open');}
@@ -1799,6 +1901,36 @@ function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});}
 setInterval(tick,1000);tick();
 loadData();applyTheme();document.getElementById('login-page').classList.add('show');populateLogin();
+
+// ── PWA: SERVICE WORKER + INSTALL PROMPT ────────────────────────────────────
+let deferredInstallPrompt=null;
+
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+}
+
+// Capture install prompt
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  deferredInstallPrompt=e;
+  // Show install button in header
+  const btn=document.getElementById('install-btn');
+  if(btn)btn.style.display='';
+});
+
+// Hide install button if already installed
+window.addEventListener('appinstalled',()=>{
+  deferredInstallPrompt=null;
+  const btn=document.getElementById('install-btn');
+  if(btn)btn.style.display='none';
+  toast('App installed! ✓');
+});
+
+function promptInstall(){
+  if(!deferredInstallPrompt)return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(()=>{deferredInstallPrompt=null;});
+}
 </script>
 </body>
 </html>
