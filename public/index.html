@@ -276,6 +276,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:var(--r8);padding:9px 14px;font-size:12px;font-family:var(--cond);font-weight:500;transform:translateY(60px);opacity:0;transition:all .25s;z-index:999;}
 .toast.show{transform:translateY(0);opacity:1;}
 .nowo-fyi{opacity:.55;}
+@keyframes slideDown{from{transform:translateX(-50%) translateY(-12px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 /* DROPDOWN MENU */
 .ddwrap{position:relative;display:inline-block;}
 .ddbtn{background:none;border:1px solid var(--border2);color:var(--muted);padding:1px 7px;cursor:pointer;font-size:15px;border-radius:var(--r4);line-height:1.4;transition:all .12s;font-weight:700;}
@@ -389,7 +390,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       </div>
     </div>
     <div id="view-mywork" style="display:none">
-      <div class="mw-top"><div><div class="mw-name" id="mw-name"></div><div class="mw-sub" id="mw-sub"></div></div></div>
+      <div class="mw-top"><div><div class="mw-name" id="mw-name"></div><div class="mw-sub" id="mw-sub"></div></div><button class="hdr-btn" onclick="openActivityModal()" style="color:var(--blue);border-color:var(--blue-dim)">⏱ Log Activity</button></div>
       <div id="mw-body"></div>
     </div>
     <div id="view-analytics" style="display:none">
@@ -424,6 +425,21 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 <div class="moverlay" id="mod-dh" onclick="if(event.target===this)closeMod('dh')">
   <div class="modal"><div class="modal-title" id="dh-title">Date History</div><div class="modal-sub">All due date changes recorded.</div><div id="dh-body"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeMod('dh')">Close</button></div></div>
 </div>
+<!-- MODAL: LOG ACTIVITY -->
+<div class="moverlay" id="mod-activity" onclick="if(event.target===this)closeMod('activity')">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Log Activity</div>
+    <div class="modal-sub">Track time on non-programming tasks</div>
+    <span class="plabel">Activity type</span>
+    <div class="ropts" id="act-ropts"></div>
+    <input class="rother" id="act-desc" placeholder="Describe the activity..." type="text" style="display:block;margin-bottom:4px">
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="confirmStartActivity()" style="background:var(--blue);border:none">⏱ Start Timer</button>
+      <button class="btn-cancel" onclick="closeMod('activity')">Cancel</button>
+    </div>
+  </div>
+</div>
+
 <div class="moverlay" id="mod-pause" onclick="if(event.target===this)cancelPauseModal()">
   <div class="modal" style="max-width:420px">
     <div class="modal-title" id="pause-modal-title">Pause</div>
@@ -697,6 +713,13 @@ function skipLogin(){currentUser={name:'Guest',color:'pnone',role:'guest'};bootA
 function doLogout(){
   currentUser=null;clearAllTimers();
   if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
+  if(window._actTimer){clearInterval(window._actTimer);window._actTimer=null;}
+  stopIdleDetection();
+  dismissIdleAlert();
+  // End any active activity on logout
+  const acts=loadActivities();
+  acts.forEach(a=>{if(!a.endedAt)a.endedAt=Date.now();});
+  saveActivities(acts);
   document.getElementById('awp').classList.remove('show');
   const badge=document.getElementById('paused-badge');if(badge)badge.remove();
   document.getElementById('app').style.display='none';
@@ -762,7 +785,21 @@ function dl(dueDate){
   return Math.ceil((due-now)/86400000);
 }
 function urgency(p){const d=dl(p.dueDate);if(d===null)return'far';if(d<0)return'overdue';if(d<=7)return'urgent';if(d<=21)return'soon';return'far';}
-function prog(p){const tot=p.parts.length;if(!tot)return{done:0,tot:0,pct:0};const done=p.parts.filter(pt=>['done','outside'].includes(pt.status)).length;return{done,tot,pct:Math.round(done/tot*100)};}
+function prog(p){const tot=p.parts.length;if(!tot)return{done:0,tot:0,pct:0};const done=p.parts.filter(pt=>effectiveDone(pt)).length;return{done,tot,pct:Math.round(done/tot*100)};}
+
+// outside + assigned → acts like drawing (person has work to do)
+// outside + unassigned → acts like done (nothing pending)
+function effectiveStatus(pt){
+  if(pt.status==='outside'){
+    return pt.assignedTo?'drawing':'done';
+  }
+  return pt.status;
+}
+// Shorthand: is this part considered "complete" for progress/filtering?
+function effectiveDone(pt){
+  const es=effectiveStatus(pt);
+  return es==='done'||es==='outside'&&!pt.assignedTo;
+}
 function fmtTs(ts){return new Date(ts).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 function fmtDur(ms){if(!ms||ms<0)ms=0;const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?`${h}h ${m}m`:`${m}m`;}
 function timeBreakdown(log){
@@ -944,7 +981,8 @@ function filterNextModal(){
     // Bug 2: exclude inprogress (already being worked on by someone else)
     // Bug 3: only show parts assigned to current user OR unassigned
     if(pt.id===pauseModalPartId)return;
-    if(['done','outside','nowo','inprogress'].includes(pt.status))return;
+    const es=effectiveStatus(pt);
+    if(['done','nowo','inprogress'].includes(es))return;
     if(pt.assignedTo&&pt.assignedTo!==currentUser?.name)return;
     cands.push({...pt,projectName:p.projectName,client:p.client,pid:p.id});
   });});
@@ -1022,10 +1060,10 @@ function logHTML(pt){
 function renderSummary(){
   const now=new Date();now.setHours(0,0,0,0);const we=new Date(now);we.setDate(we.getDate()+7);
   const all=projects.flatMap(p=>p.parts);
-  const overdue=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d<now&&!p.parts.every(pt=>['done','outside'].includes(pt.status));}).length;
+  const overdue=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d<now&&!p.parts.every(pt=>effectiveDone(pt));}).length;
   const thisWeek=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d>=now&&d<=we;}).length;
   const wl={};
-  all.filter(pt=>pt.assignedTo&&!['done','outside'].includes(pt.status)).forEach(pt=>{if(!wl[pt.assignedTo])wl[pt.assignedTo]={total:0};wl[pt.assignedTo].total++;});
+  all.filter(pt=>pt.assignedTo&&!effectiveDone(pt)).forEach(pt=>{if(!wl[pt.assignedTo])wl[pt.assignedTo]={total:0};wl[pt.assignedTo].total++;});
   const wItems=Object.entries(wl).map(([n,w])=>`<div class="sum-item"><span class="pchip ${uc(n)}">${n}</span><span class="sum-val">${w.total}</span><span style="color:var(--muted)">parts</span></div>`).join('');
   document.getElementById('summary-banner').innerHTML=`
     <div class="sum-date">${new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'})}</div>
@@ -1043,7 +1081,7 @@ function filtered(){
   else if(filterMode==='week')list=list.filter(p=>urgency(p)==='urgent');
   else if(filterMode==='nowo')list=list.filter(p=>p.parts.filter(pt=>pt.status==='nowo').length>0);
   else if(filterMode==='outside')list=list.filter(p=>p.parts.some(pt=>pt.status==='outside'));
-  else if(filterMode==='done')list=list.filter(p=>p.parts.every(pt=>['done','outside'].includes(pt.status)));
+  else if(filterMode==='done')list=list.filter(p=>p.parts.every(pt=>effectiveDone(pt)));
   if(searchStr){const s=searchStr.toLowerCase();list=list.filter(p=>p.client.toLowerCase().includes(s)||p.projectName.toLowerCase().includes(s)||p.parts.some(pt=>pt.wo.toLowerCase().includes(s)||pt.desc.toLowerCase().includes(s)));}
   return list;
 }
@@ -1051,10 +1089,10 @@ function renderDash(){
   const all=projects.flatMap(p=>p.parts);
   document.getElementById('s-total').textContent=projects.length;
   document.getElementById('s-nowo').textContent=all.filter(pt=>pt.status==='nowo').length;
-  document.getElementById('s-drawing').textContent=all.filter(pt=>pt.status==='drawing').length;
+  document.getElementById('s-drawing').textContent=all.filter(pt=>effectiveStatus(pt)==='drawing').length;
   document.getElementById('s-prog').textContent=all.filter(pt=>['inprogress','paused'].includes(pt.status)).length;
-  document.getElementById('s-out').textContent=all.filter(pt=>pt.status==='outside').length;
-  document.getElementById('s-done').textContent=all.filter(pt=>pt.status==='done').length;
+  document.getElementById('s-out').textContent=all.filter(pt=>pt.status==='outside'&&!pt.assignedTo).length;
+  document.getElementById('s-done').textContent=all.filter(pt=>effectiveDone(pt)).length;
   document.getElementById('s-delivered').textContent=projects.filter(p=>p.delivered).length;
   const list=filtered(),con=document.getElementById('dash-list');
   if(!list.length){con.innerHTML=`<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:15px">${!projects.length?'No data yet':'No matches'}</div></div>`;return;}
@@ -1064,7 +1102,7 @@ function renderDash(){
     const rc=u==='overdue'?'var(--red)':u==='urgent'?'var(--amber)':'var(--blue)';
     const[dlTxt,dcc]=dueChip(d,p.dueStr);
     const cardCls=u==='overdue'?'overdue':u==='urgent'?'urgent':u==='soon'?'on-track':'';
-    const n=p.parts.filter(pt=>pt.status==='nowo').length,dr=p.parts.filter(pt=>pt.status==='drawing').length;
+    const n=p.parts.filter(pt=>pt.status==='nowo').length,dr=p.parts.filter(pt=>effectiveStatus(pt)==='drawing').length;
     const asgn=[...new Set(p.parts.filter(pt=>pt.assignedTo).map(pt=>pt.assignedTo))];
     const chips=asgn.map(nm=>`<span class="pchip ${uc(nm)}">${nm}</span>`).join('');
     const dhc=p.dateHistory?.length||0;
@@ -1209,10 +1247,11 @@ function renderMyWork(){
   projects.forEach(p=>{p.parts.forEach(pt=>{
     if(pt.assignedTo!==currentUser.name)return;
     const obj={...pt,projectName:p.projectName,client:p.client,dueDate:p.dueDate,dueStr:p.dueStr,pid:p.id};
-    if(pt.status==='nowo')myNowo.push(obj);else mine.push(obj);
+    if(pt.status==='nowo')myNowo.push(obj);
+    else mine.push(obj); // outside+assigned lands here, effectiveStatus handles its section/actions
   });});
-  const active=mine.filter(pt=>pt.status!=='done');
-  const done=mine.filter(pt=>pt.status==='done');
+  const active=mine.filter(pt=>effectiveStatus(pt)!=='done');
+  const done=mine.filter(pt=>effectiveStatus(pt)==='done');
   const overdue=active.filter(pt=>{const d=dl(pt.dueDate);return d!==null&&d<0;});
   const thisWeek=active.filter(pt=>{const d=dl(pt.dueDate);return d!==null&&d>=0&&d<=7;});
   const later=active.filter(pt=>{const d=dl(pt.dueDate);return d===null||d>7;});
@@ -1226,7 +1265,7 @@ function renderMyWork(){
     const isReopen=reopenOpenId===partId,isLog=logOpenIds.has(partId);
     const cardCls=pt.status==='done'?'dn':pt.status==='paused'?'pa':pt.status==='inprogress'?'ip':d!==null&&d<0?'ov':d!==null&&d<=7?'wk':'';
     let acts='';
-    if(pt.status==='drawing')acts=`<button class="abtn a-start" onclick="startPt('${pid}','${partId}')">▶ Start</button>`;
+    if(effectiveStatus(pt)==='drawing')acts=`<button class="abtn a-start" onclick="startPt('${pid}','${partId}')">▶ Start</button>`;
     else if(pt.status==='inprogress')acts=`<button class="abtn a-pause" onclick="openPause('${pid}','${partId}')">⏸ Pause</button><button class="abtn a-done" onclick="donePt('${pid}','${partId}')">✓ Done</button><span class="mw-timer" id="timer-${partId}">${fmtDur(total)}</span>`;
     else if(pt.status==='paused')acts=`<button class="abtn a-resume" onclick="resumePt('${pid}','${partId}')">▶ Resume</button><span style="font-size:11px;color:var(--muted)">${(pt.log||[]).slice().reverse().find(e=>e.action==='paused')?.reason||''}</span>`;
     else if(pt.status==='done')acts=`<button class="abtn a-reopen" onclick="openReopen('${pid}','${partId}')">↩ Reopen</button>`;
@@ -1268,13 +1307,14 @@ function renderMyWork(){
     html+='</div>';
   }
   if(!mine.length&&!myNowo.length)html=`<div style="text-align:center;padding:60px 20px;color:var(--muted)"><div style="font-size:15px;margin-bottom:8px">Nothing assigned yet</div></div>`;
-  document.getElementById('mw-body').innerHTML=html;
+  document.getElementById('mw-body').innerHTML=getActivityHTML()+html;
   clearAllTimers();
   mine.filter(pt=>pt.status==='inprogress').forEach(pt=>{
     const{total:s0}=timeBreakdown(pt.log||[]);const w0=Date.now();
     liveTimers[pt.id]=setInterval(()=>{const el=document.getElementById('timer-'+pt.id);if(el)el.textContent=fmtDur(s0+(Date.now()-w0));else clearInterval(liveTimers[pt.id]);},10000);
   });
   updateAWP();
+  startActTimer();
 }
 let analyticsPeriod='all';
 function setAnalyticsPeriod(p,btn){
@@ -1285,56 +1325,164 @@ function setAnalyticsPeriod(p,btn){
 }
 function renderAnalytics(){
   const cutoff=analyticsPeriod==='all'?0:Date.now()-(analyticsPeriod*86400000);
-  const all=projects.flatMap(p=>p.parts.map(pt=>({...pt,projectName:p.projectName,client:p.client,dueDate:p.dueDate})));
+  const now=new Date();now.setHours(0,0,0,0);
+  const all=projects.flatMap(p=>p.parts.map(pt=>({...pt,projectName:p.projectName,client:p.client,pid:p.id,dueDate:p.dueDate,dueStr:p.dueStr,loadDelivered:p.delivered,loadDeliveredAt:p.deliveredAt,loadDueDate:p.dueDate})));
+
   const byPerson={};
   all.forEach(pt=>{
     if(!pt.assignedTo)return;
-    if(!byPerson[pt.assignedTo])byPerson[pt.assignedTo]={done:0,inprogress:0,paused:0,drawing:0,normalTime:0,revisionTime:0,pauses:0,revisions:0};
-    byPerson[pt.assignedTo][pt.status]=(byPerson[pt.assignedTo][pt.status]||0)+1;
+    if(!byPerson[pt.assignedTo])byPerson[pt.assignedTo]={done:0,active:0,drawing:0,normalTime:0,revisionTime:0,pauses:0,revisions:0,doneTimes:[]};
+    if(effectiveDone(pt))byPerson[pt.assignedTo].done++;
+    else if(['inprogress','paused'].includes(pt.status))byPerson[pt.assignedTo].active++;
+    else byPerson[pt.assignedTo].drawing++;
     if(pt.log){
-      const filteredLog=pt.log.filter(e=>e.ts>=cutoff);
-      const{normal,revision}=timeBreakdown(filteredLog);
+      const fl=pt.log.filter(e=>e.ts>=cutoff);
+      const{normal,revision}=timeBreakdown(fl);
       byPerson[pt.assignedTo].normalTime+=normal;
       byPerson[pt.assignedTo].revisionTime+=revision;
-      byPerson[pt.assignedTo].pauses+=filteredLog.filter(e=>e.action==='paused').length;
-      byPerson[pt.assignedTo].revisions+=filteredLog.filter(e=>e.action==='reopened').length;
+      byPerson[pt.assignedTo].pauses+=fl.filter(e=>e.action==='paused').length;
+      byPerson[pt.assignedTo].revisions+=fl.filter(e=>e.action==='reopened').length;
+      const doneEvt=fl.find(e=>e.action==='done');
+      const startEvt=fl.find(e=>e.action==='started');
+      if(doneEvt&&startEvt){byPerson[pt.assignedTo].doneTimes.push(normal);}
     }
   });
+
   const pauseR={};
-  all.forEach(pt=>{
-    (pt.log||[]).filter(e=>e.action==='paused'&&e.reason&&e.ts>=cutoff)
-      .forEach(e=>{pauseR[e.reason]=(pauseR[e.reason]||0)+1;});
-  });
+  all.forEach(pt=>{(pt.log||[]).filter(e=>e.action==='paused'&&e.reason&&e.ts>=cutoff).forEach(e=>{pauseR[e.reason]=(pauseR[e.reason]||0)+1;});});
   const totalP=Object.values(pauseR).reduce((a,b)=>a+b,0);
-  const dateChanges=projects.filter(p=>p.dateHistory?.length).map(p=>({projectName:p.projectName,client:p.client,changes:p.dateHistory.length})).sort((a,b)=>b.changes-a.changes);
-  const now=new Date();now.setHours(0,0,0,0);const we=new Date(now);we.setDate(we.getDate()+7);
+
+  const statusCounts={done:0,inprogress:0,paused:0,drawing:0,nowo:0,outside_free:0};
+  all.forEach(pt=>{
+    if(pt.status==='outside'&&!pt.assignedTo)statusCounts.outside_free++;
+    else if(pt.status==='outside'&&pt.assignedTo)statusCounts.drawing++;
+    else statusCounts[pt.status]=(statusCounts[pt.status]||0)+1;
+  });
+  const totalParts=all.length;
+  const statusDefs=[
+    {key:'done',label:'Done',color:'var(--green)'},
+    {key:'drawing',label:'Drawing / Outside assigned',color:'var(--blue)'},
+    {key:'inprogress',label:'In Progress',color:'var(--amber)'},
+    {key:'paused',label:'Paused',color:'#b07820'},
+    {key:'nowo',label:'No W/O',color:'var(--red)'},
+    {key:'outside_free',label:'Outside (unassigned)',color:'var(--purple)'},
+  ];
+
+  function buildDonut(){
+    const r=70,cx=90,cy=90,stroke=22,circ=2*Math.PI*r;
+    let offset=0;
+    const slices=statusDefs.filter(d=>statusCounts[d.key]>0).map(d=>{
+      const pct=statusCounts[d.key]/totalParts,dash=pct*circ,gap=circ-dash;
+      const sl=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${d.color}" stroke-width="${stroke}" stroke-dasharray="${dash.toFixed(2)} ${gap.toFixed(2)}" stroke-dashoffset="${(-offset*circ).toFixed(2)}" transform="rotate(-90 ${cx} ${cy})"/>`;
+      offset+=pct;return sl;
+    }).join('');
+    const legend=statusDefs.filter(d=>statusCounts[d.key]>0).map(d=>{
+      const pct=totalParts?Math.round(statusCounts[d.key]/totalParts*100):0;
+      return`<div style="display:flex;align-items:center;gap:7px;margin-bottom:6px"><div style="width:10px;height:10px;border-radius:2px;background:${d.color};flex-shrink:0"></div><span style="font-size:11px;color:var(--text2);flex:1">${d.label}</span><span style="font-size:11px;font-family:var(--mono);color:var(--muted)">${statusCounts[d.key]}</span><span style="font-size:10px;color:var(--muted);min-width:28px;text-align:right">${pct}%</span></div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><svg width="180" height="180" viewBox="0 0 180 180"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border2)" stroke-width="${stroke}"/>${slices}<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="22" font-weight="700" font-family="var(--cond)" fill="var(--text)">${totalParts}</text><text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" font-family="var(--cond)" fill="var(--muted)">TOTAL</text></svg><div style="flex:1;min-width:140px">${legend}</div></div>`;
+  }
+
+  function buildWeeklyTrend(){
+    const weeks=[];
+    for(let w=5;w>=0;w--){
+      const wStart=new Date(now);wStart.setDate(wStart.getDate()-wStart.getDay()-w*7);wStart.setHours(0,0,0,0);
+      const wEnd=new Date(wStart);wEnd.setDate(wEnd.getDate()+7);
+      const label=wStart.toLocaleDateString('en-CA',{month:'short',day:'numeric'});
+      let count=0;
+      all.forEach(pt=>{(pt.log||[]).forEach(e=>{if(e.action==='done'&&e.ts>=wStart.getTime()&&e.ts<wEnd.getTime())count++;});});
+      weeks.push({label,count});
+    }
+    const maxW=Math.max(...weeks.map(w=>w.count),1);
+    const bars=weeks.map(w=>{
+      const h=Math.round((w.count/maxW)*80);
+      return`<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1"><span style="font-size:10px;font-family:var(--mono);color:var(--amber);min-height:14px">${w.count||''}</span><div style="width:100%;background:var(--surface2);border-radius:3px 3px 0 0;height:80px;display:flex;align-items:flex-end"><div style="width:100%;background:var(--amber);border-radius:3px 3px 0 0;height:${h}px;min-height:${w.count?2:0}px"></div></div><span style="font-size:9px;color:var(--muted);text-align:center;white-space:nowrap">${w.label}</span></div>`;
+    }).join('');
+    return`<div style="display:flex;align-items:flex-end;gap:6px;padding-top:8px">${bars}</div>`;
+  }
+
+  function buildOnTime(){
+    const delivered=projects.filter(p=>p.delivered&&p.deliveredAt&&p.dueDate);
+    if(!delivered.length)return`<div style="color:var(--muted);font-size:12px">No delivered loads yet</div>`;
+    let onTime=0,late=0,totalDays=0;
+    delivered.forEach(p=>{const due=new Date(p.dueDate);due.setHours(23,59,59);const diff=Math.ceil((new Date(p.deliveredAt)-due)/86400000);if(diff<=0)onTime++;else{late++;totalDays+=diff;}});
+    const rate=Math.round(onTime/delivered.length*100);
+    const avgDaysLate=late?Math.round(totalDays/late):0;
+    const bc=rate>=80?'var(--green)':rate>=60?'var(--amber)':'var(--red)';
+    return`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><div style="text-align:center"><div style="font-family:var(--cond);font-size:48px;font-weight:700;color:${bc};line-height:1">${rate}%</div><div style="font-size:11px;color:var(--muted);margin-top:4px">on time</div></div><div style="flex:1;min-width:120px"><div class="drow"><span style="color:var(--green)">✓ On time:</span><span style="float:right;font-family:var(--mono)">${onTime}</span></div><div class="drow"><span style="color:var(--red)">✗ Late:</span><span style="float:right;font-family:var(--mono)">${late}</span></div>${late?`<div class="drow"><span style="color:var(--muted)">Avg days late:</span><span style="float:right;font-family:var(--mono);color:var(--red)">${avgDaysLate}d</span></div>`:''}<div class="drow"><span style="color:var(--muted)">Total delivered:</span><span style="float:right;font-family:var(--mono)">${delivered.length}</span></div></div></div>`;
+  }
+
+  function buildAvgTime(){
+    if(!Object.keys(byPerson).length)return`<div style="color:var(--muted);font-size:12px">No data yet — assign parts and track work to see stats</div>`;
+    const oldest=all.flatMap(pt=>(pt.log||[]).filter(e=>e.action==='done').map(e=>e.ts)).sort()[0];
+    const spanMs=oldest?Date.now()-oldest:1;
+    const spanWeeks=Math.max(spanMs/(7*86400000),1);
+    const spanMonths=Math.max(spanMs/(30*86400000),1);
+    return Object.entries(byPerson).map(([name,s])=>{
+      const doneParts=all.filter(pt=>pt.assignedTo===name&&(pt.log||[]).some(e=>e.action==='done'&&e.ts>=cutoff));
+      const doneCount=doneParts.length;
+      const avgMs=doneCount&&s.doneTimes.length?s.doneTimes.reduce((a,b)=>a+b,0)/s.doneTimes.length:0;
+      const perWeek=(doneCount/spanWeeks).toFixed(1);
+      const perMonth=(doneCount/spanMonths).toFixed(1);
+      const revPct=doneCount?Math.round((s.revisions/doneCount)*100):0;
+      const qualColor=revPct===0?'var(--green)':revPct<=20?'var(--amber)':'var(--red)';
+      return`<div class="prow"><span class="pchip ${uc(name)}" style="flex-shrink:0">${name}</span><div style="flex:1;margin-left:8px"><div style="display:flex;gap:16px;flex-wrap:wrap;margin-bottom:4px"><span style="font-size:11px;color:var(--muted)">Avg/week: <strong style="color:var(--text);font-family:var(--mono)">${perWeek}</strong></span><span style="font-size:11px;color:var(--muted)">Avg/month: <strong style="color:var(--text);font-family:var(--mono)">${perMonth}</strong></span>${avgMs?`<span style="font-size:11px;color:var(--muted)">Avg time/part: <strong style="color:var(--blue);font-family:var(--mono)">${fmtDur(avgMs)}</strong></span>`:''}</div><div style="font-size:11px;color:var(--muted)">Revision rate: <strong style="color:${qualColor}">${revPct}%</strong> <span style="margin-left:6px">${s.revisions} reopens · ${doneCount} parts done</span></div></div><div class="pstat"><strong style="color:var(--green)">${doneCount}</strong><span>done</span></div></div>`;
+    }).join('');
+  }
+
+  function buildQuality(){
+    const withRev=all.filter(pt=>(pt.log||[]).some(e=>e.action==='reopened'&&e.ts>=cutoff));
+    const doneAll=all.filter(pt=>(pt.log||[]).some(e=>e.action==='done'&&e.ts>=cutoff));
+    const rate=doneAll.length?Math.round(withRev.length/doneAll.length*100):0;
+    const bc=rate===0?'var(--green)':rate<=15?'var(--amber)':'var(--red)';
+    const topReasons={};
+    withRev.forEach(pt=>{(pt.log||[]).filter(e=>e.action==='reopened'&&e.reason&&e.ts>=cutoff).forEach(e=>{topReasons[e.reason]=(topReasons[e.reason]||0)+1;});});
+    const topR=Object.entries(topReasons).sort((a,b)=>b[1]-a[1]).slice(0,3);
+    return`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><div style="text-align:center"><div style="font-family:var(--cond);font-size:48px;font-weight:700;color:${bc};line-height:1">${rate}%</div><div style="font-size:11px;color:var(--muted);margin-top:4px">revision rate</div></div><div style="flex:1;min-width:120px"><div class="drow"><span style="color:var(--muted)">Parts completed:</span><span style="float:right;font-family:var(--mono)">${doneAll.length}</span></div><div class="drow"><span style="color:var(--muted)">Parts revised:</span><span style="float:right;font-family:var(--mono);color:${bc}">${withRev.length}</span></div>${topR.map(([r,n])=>`<div class="drow"><span style="color:var(--muted);font-size:11px">${r}</span><span style="float:right;font-family:var(--mono);font-size:11px">${n}×</span></div>`).join('')}</div></div>`;
+  }
+
+  const we=new Date(now);we.setDate(we.getDate()+7);
   const cap=JSON.parse(localStorage.getItem('ve_cap')||'{}');
   const yr=now.getFullYear(),wn=Math.ceil((((now-new Date(yr,0,1))/86400000)+new Date(yr,0,1).getDay()+1)/7);
   const wk=`${yr}-W${String(wn).padStart(2,'0')}`,thisCap=cap[wk]||{};
   const progrs=users.filter(u=>['programmer','manager'].includes(u.role));
   const asgWk={};
-  projects.forEach(p=>{const due=p.dueDate?new Date(p.dueDate):null;if(!due)return;due.setHours(0,0,0,0);if(due<now||due>we)return;p.parts.forEach(pt=>{if(pt.assignedTo&&!['done','outside'].includes(pt.status)){asgWk[pt.assignedTo]=(asgWk[pt.assignedTo]||0)+1;}});});
-  const capHTML=progrs.map(u=>{const c=thisCap[u.name]||0,a=asgWk[u.name]||0,pct=c?Math.min(Math.round(a/c*100),100):0,bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--green)';
-    return`<div class="capperson"><div style="font-size:12px;font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:7px"><span class="pchip ${u.color}">${u.name}</span></div><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px"><span style="font-size:10px;color:var(--muted)">Capacity:</span><input class="capinp" type="number" min="0" value="${c}" placeholder="0" onchange="saveCap('${wk}','${u.name}',this.value)"> parts/week</div>${c?`<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${a} assigned (${pct}%)</div><div class="btrack"><div class="bfill" style="width:${pct}%;background:${bc}"></div></div>`:`<div style="font-size:11px;color:var(--muted2)">Set capacity above</div>`}</div>`;
-  }).join('');
+  projects.forEach(p=>{const due=p.dueDate?new Date(p.dueDate):null;if(!due)return;due.setHours(0,0,0,0);if(due<now||due>we)return;p.parts.forEach(pt=>{if(pt.assignedTo&&!effectiveDone(pt)){asgWk[pt.assignedTo]=(asgWk[pt.assignedTo]||0)+1;}});});
+  const capHTML=progrs.map(u=>{const c=thisCap[u.name]||0,a=asgWk[u.name]||0,pct=c?Math.min(Math.round(a/c*100),100):0,bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--green)';return`<div class="capperson"><div style="font-size:12px;font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:7px"><span class="pchip ${u.color}">${u.name}</span></div><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px"><span style="font-size:10px;color:var(--muted)">Capacity:</span><input class="capinp" type="number" min="0" value="${c}" placeholder="0" onchange="saveCap('${wk}','${u.name}',this.value)"> parts/week</div>${c?`<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${a} assigned (${pct}%)</div><div class="btrack"><div class="bfill" style="width:${pct}%;background:${bc}"></div></div>`:`<div style="font-size:11px;color:var(--muted2)">Set capacity above</div>`}</div>`;}).join('');
   const personHTML=Object.entries(byPerson).map(([name,s])=>{
     const total=s.normalTime+s.revisionTime;const revPct=total?Math.round(s.revisionTime/total*100):0;
+    // Activity time for this person
+    const actTime=loadActivities().filter(a=>a.user===name&&a.endedAt&&a.startedAt>=cutoff).reduce((sum,a)=>sum+(a.endedAt-a.startedAt),0);
     return`<div class="prow"><span class="pchip ${uc(name)}" style="flex-shrink:0">${name}</span>
     <div style="flex:1"><div style="font-size:12px;font-weight:500;margin-bottom:2px">${name}</div>
-    <div style="font-size:11px;color:var(--muted)">Work: <span style="color:var(--green)">${fmtDur(s.normalTime)}</span>${s.revisionTime?` · Rev: <span style="color:var(--red)">${fmtDur(s.revisionTime)}</span> (${revPct}%)`:''}</div></div>
-    <div class="pstat"><strong style="color:var(--green)">${s.done||0}</strong><span>done</span></div>
-    <div class="pstat"><strong style="color:var(--amber)">${(s.inprogress||0)+(s.paused||0)}</strong><span>active</span></div>
-    <div class="pstat"><strong style="color:var(--blue)">${s.drawing||0}</strong><span>queued</span></div></div>`;
+    <div style="font-size:11px;color:var(--muted)">Programming: <span style="color:var(--green)">${fmtDur(s.normalTime)}</span>${s.revisionTime?` · Rev: <span style="color:var(--red)">${fmtDur(s.revisionTime)}</span>`:''}</div>
+    ${actTime?`<div style="font-size:11px;color:var(--muted);margin-top:2px">Other activities: <span style="color:var(--blue)">${fmtDur(actTime)}</span></div>`:''}</div>
+    <div class="pstat"><strong style="color:var(--green)">${s.done}</strong><span>done</span></div>
+    <div class="pstat"><strong style="color:var(--amber)">${s.active}</strong><span>active</span></div>
+    <div class="pstat"><strong style="color:var(--blue)">${s.drawing}</strong><span>queued</span></div></div>`;
   }).join('')||`<div style="color:var(--muted);font-size:12px">No data yet</div>`;
-  const reasonsHTML=Object.entries(pauseR).sort((a,b)=>b[1]-a[1]).map(([r,n])=>`<div class="brow"><span class="blabel">${r}</span><div class="btrack"><div class="bfill" style="width:${totalP?Math.round(n/totalP*100):0}%"></div></div><span class="bval">${n}</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No pauses recorded yet</div>`;
-  const dateHTML=dateChanges.slice(0,8).map(p=>`<div class="drow"><strong>${p.client}</strong> · ${p.projectName}<span style="float:right;color:var(--amber)">${p.changes}x</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No date changes yet</div>`;
+  const pauseHTML=Object.entries(pauseR).sort((a,b)=>b[1]-a[1]).map(([r,n])=>`<div class="brow"><span class="blabel">${r}</span><div class="btrack"><div class="bfill" style="width:${totalP?Math.round(n/totalP*100):0}%"></div></div><span class="bval">${n}</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No pauses recorded yet</div>`;
+  const dateHTML=projects.filter(p=>p.dateHistory?.length).sort((a,b)=>b.dateHistory.length-a.dateHistory.length).slice(0,6).map(p=>`<div class="drow"><strong>${p.client}</strong> · ${p.projectName}<span style="float:right;color:var(--amber)">${p.dateHistory.length}×</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No date changes yet</div>`;
+
   document.getElementById('analytics-body').innerHTML=`
-    <div style="margin-bottom:18px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px">Weekly Capacity — ${wk}</div><div class="capgrid">${capHTML}</div></div>
-    <div class="ag">
+    <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-bottom:14px">
+      <div class="acard"><div class="acard-title">Parts by Status</div>${buildDonut()}</div>
+      <div class="acard"><div class="acard-title">Weekly Output — Parts Completed</div>${buildWeeklyTrend()}</div>
+    </div>
+    <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:14px">
+      <div class="acard"><div class="acard-title">On-Time Delivery Rate</div>${buildOnTime()}</div>
+      <div class="acard"><div class="acard-title">Quality — Revision Rate</div>${buildQuality()}</div>
+    </div>
+    <div style="margin-bottom:14px">
+      <div class="acard"><div class="acard-title">Productivity — Avg Parts / Week · Month · Time per Part</div>${buildAvgTime()}</div>
+    </div>
+    <div class="ag" style="margin-bottom:14px">
       <div class="acard"><div class="acard-title">Team Performance</div>${personHTML}</div>
-      <div class="acard"><div class="acard-title">Pause Reasons</div>${reasonsHTML}</div>
-      <div class="acard"><div class="acard-title">Most Rescheduled</div>${dateHTML}</div>
-    </div>`;
+      <div class="acard"><div class="acard-title">Pause Reasons</div>${pauseHTML}</div>
+      <div class="acard"><div class="acard-title">Most Rescheduled Loads</div>${dateHTML}</div>
+    </div>
+    <div style="margin-bottom:18px"><div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:var(--muted);margin-bottom:10px">Weekly Capacity — ${wk}</div><div class="capgrid">${capHTML}</div></div>
+  `;
 }
 function exportAnalytics(){
   const rows=[['Client','Load','W/O','Description','Status','Assigned To','Work Time (min)','Revision Time (min)','Pauses','Reopens','Due Date']];
@@ -1520,6 +1668,128 @@ function confirmEditWO(){
   }
   save();closeMod('editwo');render();renderSchedule();renderSummary();toast('W/O updated ✓');
 }
+// ── ACTIVITY TRACKING ─────────────────────────────────────────────────────────
+const ACT_TYPES=['Setup de máquina','Reunião / Meeting','Treinamento','Problema técnico / Downtime','Tarefa administrativa','Outro'];
+
+function saveActivities(acts){localStorage.setItem('ve_activities',JSON.stringify(acts));}
+function loadActivities(){try{return JSON.parse(localStorage.getItem('ve_activities')||'[]');}catch{return[];}}
+
+function getActiveActivity(){
+  return loadActivities().find(a=>a.user===currentUser?.name&&!a.endedAt)||null;
+}
+
+function openActivityModal(){
+  // Build type pills
+  document.getElementById('act-ropts').innerHTML=ACT_TYPES.map(t=>
+    `<button class="rpill" onclick="selActType(this)">${t}</button>`
+  ).join('');
+  document.getElementById('act-desc').value='';
+  openMod('activity');
+}
+
+function selActType(btn){
+  document.querySelectorAll('#act-ropts .rpill').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+}
+
+function confirmStartActivity(){
+  const typBtn=document.querySelector('#act-ropts .rpill.sel');
+  if(!typBtn){toast('Please select an activity type');return;}
+  const type=typBtn.textContent;
+  const desc=(document.getElementById('act-desc').value||'').trim();
+
+  // If a part is in progress, pause it first
+  let inprogressPid=null,inprogressPtId=null;
+  for(const p of projects){
+    const pt=p.parts.find(pt=>pt.assignedTo===currentUser?.name&&pt.status==='inprogress');
+    if(pt){inprogressPid=p.id;inprogressPtId=pt.id;break;}
+  }
+  if(inprogressPid){
+    updatePt(inprogressPid,inprogressPtId,{status:'paused',log:logEvt('paused','Switched to activity: '+type)});
+  }
+
+  // End any existing activity
+  const acts=loadActivities();
+  acts.forEach(a=>{if(a.user===currentUser?.name&&!a.endedAt)a.endedAt=Date.now();});
+
+  // Start new activity
+  acts.push({
+    id:'act_'+Date.now(),
+    user:currentUser.name,
+    type,
+    desc,
+    startedAt:Date.now(),
+    endedAt:null
+  });
+  saveActivities(acts);
+  closeMod('activity');
+  render();renderMyWork();updateAWP();
+  toast(`⏱ Started: ${type}`);
+}
+
+function stopActivity(){
+  const acts=loadActivities();
+  acts.forEach(a=>{if(a.user===currentUser?.name&&!a.endedAt)a.endedAt=Date.now();});
+  saveActivities(acts);
+  render();renderMyWork();updateAWP();
+  toast('Activity stopped ✓');
+}
+
+function getActivityHTML(){
+  // Returns HTML for active activity card in My Work
+  const act=getActiveActivity();
+  if(!act)return'';
+  const elapsed=Date.now()-act.startedAt;
+  return`<div class="mwcard ip" style="border-left-color:var(--blue);background:rgba(74,159,232,.05);margin-bottom:16px">
+    <div class="mwcard-top">
+      <div>
+        <div class="mw-proj" style="color:var(--blue)">⏱ Activity in progress</div>
+        <div class="mw-part">${act.type}</div>
+        ${act.desc?`<div class="mw-wo">${act.desc}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+        <span class="sbadge" style="background:var(--blue-bg);border-color:var(--blue-dim);color:var(--blue)">ACTIVE</span>
+        <span class="mw-timer" id="act-timer" style="color:var(--blue)">${fmtDur(elapsed)}</span>
+      </div>
+    </div>
+    <div class="mw-acts">
+      <button class="abtn" style="border-color:var(--blue-dim);color:var(--blue)" onclick="stopActivity()">■ Stop</button>
+      <button class="abtn a-log" onclick="toggleActLog()">History</button>
+    </div>
+    <div id="act-log-panel" style="display:none;margin-top:10px"></div>
+  </div>`;
+}
+
+function toggleActLog(){
+  const panel=document.getElementById('act-log-panel');
+  if(!panel)return;
+  if(panel.style.display==='none'){
+    const acts=loadActivities().filter(a=>a.user===currentUser?.name&&a.endedAt).slice(-8).reverse();
+    panel.innerHTML=`<div class="log-panel"><div class="log-title">Recent Activities</div>`+
+      (acts.length?acts.map(a=>`<div class="log-entry">
+        <span class="log-ts">${fmtTs(a.startedAt)}</span>
+        <span class="log-act" style="color:var(--blue)">${a.type}</span>
+        ${a.desc?`<span class="log-rsn">· ${a.desc}</span>`:''}
+        <span class="log-usr" style="margin-left:auto">${fmtDur(a.endedAt-a.startedAt)}</span>
+      </div>`).join(''):`<div style="color:var(--muted);font-size:12px">No past activities</div>`)
+      +`</div>`;
+    panel.style.display='';
+  } else {
+    panel.style.display='none';
+  }
+}
+
+function startActTimer(){
+  // Live timer for active activity in My Work
+  clearInterval(window._actTimer);
+  window._actTimer=setInterval(()=>{
+    const el=document.getElementById('act-timer');
+    if(!el){clearInterval(window._actTimer);return;}
+    const act=getActiveActivity();
+    if(act)el.textContent=fmtDur(Date.now()-act.startedAt);
+  },1000);
+}
+
 function updateAWP(){
   if(!currentUser||currentUser.role==='guest'){
     document.getElementById('awp').classList.remove('show');
@@ -1527,54 +1797,58 @@ function updateAWP(){
     return;
   }
 
-  // Find active (inprogress) part for current user
+  const activeAct=getActiveActivity();
   let apt=null,apid=null,aproj=null;
   for(const p of projects){
     const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='inprogress');
     if(pt){apt=pt;apid=p.id;aproj=p;break;}
   }
 
-  const popup=document.getElementById('awp');
-
-  // Find paused part separately for the header badge
   let pausedPt=null,pausedProj=null,pausedPid=null;
-  for(const p of projects){
-    const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='paused');
-    if(pt){pausedPt=pt;pausedProj=p;pausedPid=p.id;break;}
+  if(!activeAct){
+    for(const p of projects){
+      const pt=p.parts.find(pt=>pt.assignedTo===currentUser.name&&pt.status==='paused');
+      if(pt){pausedPt=pt;pausedProj=p;pausedPid=p.id;break;}
+    }
   }
   updatePausedBadge(pausedPt?{pt:pausedPt,pid:pausedPid,proj:pausedProj}:null);
 
-  // AWP only shows when actively working
-  if(!apt){
+  const popup=document.getElementById('awp');
+  if(!apt&&!activeAct){
     popup.classList.remove('show');
     if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
     return;
   }
 
   popup.classList.add('show');
-  popup.style.borderLeftColor='var(--amber)';
-  popup.style.borderColor='var(--amber-dim)';
-
-  document.getElementById('awp-part').textContent=apt.desc;
-  document.getElementById('awp-proj').textContent=`${aproj.client} · ${aproj.projectName}`;
-
   const pauseBtn=document.getElementById('awp-pause'),doneBtn=document.getElementById('awp-done');
-  pauseBtn.textContent='⏸ Pause';pauseBtn.className='abtn a-pause';
-  pauseBtn.onclick=()=>openPause(apid,apt.id);
-  doneBtn.style.display='';doneBtn.onclick=()=>donePt(apid,apt.id);
-
-  // Recalculate time fresh from saved log
   if(awpTimer){clearInterval(awpTimer);awpTimer=null;}
-  // Re-read the part from projects to get the latest log (after all updates)
-  const freshPt=projects.find(p=>p.id===apid)?.parts.find(pt=>pt.id===apt.id)||apt;
-  const savedTotal=timeBreakdown(freshPt.log||[]).total;
-  const w0=Date.now();
-  function tick(){
-    const el=document.getElementById('awp-time');
-    if(el)el.textContent=fmtDur(savedTotal+(Date.now()-w0));
+
+  if(activeAct&&!apt){
+    popup.style.borderLeftColor='var(--blue)';popup.style.borderColor='var(--blue-dim)';
+    document.getElementById('awp-part').textContent=activeAct.type;
+    document.getElementById('awp-proj').textContent=activeAct.desc||'Activity in progress';
+    pauseBtn.textContent='■ Stop';pauseBtn.className='abtn';
+    pauseBtn.style.cssText='border-color:var(--blue-dim);color:var(--blue)';
+    pauseBtn.onclick=()=>stopActivity();
+    doneBtn.style.display='none';
+    const w0=activeAct.startedAt;
+    function tickAct(){const el=document.getElementById('awp-time');if(el)el.textContent=fmtDur(Date.now()-w0);}
+    tickAct();awpTimer=setInterval(tickAct,1000);
+  } else if(apt){
+    popup.style.borderLeftColor='var(--amber)';popup.style.borderColor='var(--amber-dim)';
+    document.getElementById('awp-part').textContent=apt.desc;
+    document.getElementById('awp-proj').textContent=`${aproj.client} · ${aproj.projectName}`;
+    pauseBtn.style.cssText='';
+    pauseBtn.textContent='⏸ Pause';pauseBtn.className='abtn a-pause';
+    pauseBtn.onclick=()=>openPause(apid,apt.id);
+    doneBtn.style.display='';doneBtn.onclick=()=>donePt(apid,apt.id);
+    const freshPt=projects.find(p=>p.id===apid)?.parts.find(pt=>pt.id===apt.id)||apt;
+    const savedTotal=timeBreakdown(freshPt.log||[]).total;
+    const w0=Date.now();
+    function tick(){const el=document.getElementById('awp-time');if(el)el.textContent=fmtDur(savedTotal+(Date.now()-w0));}
+    tick();awpTimer=setInterval(tick,1000);
   }
-  tick();
-  awpTimer=setInterval(tick,1000);
 }
 
 function updatePausedBadge(data){
@@ -1787,7 +2061,7 @@ function bulkAssign(pid,name){
   const p=projects.find(x=>x.id===pid);if(!p)return;
   const now=Date.now();
   p.parts.forEach(pt=>{
-    if(!['done','outside'].includes(pt.status)){
+    if(!effectiveDone(pt)){
       pt.assignedTo=name;pt.assignedAt=now;
     }
   });
@@ -1824,7 +2098,7 @@ function openDeliverLoad(pid){
   const p=projects.find(x=>x.id===pid);if(!p)return;
   document.getElementById('deliver-pid').value=pid;
   document.getElementById('deliver-sub').textContent=`${p.client} · ${p.projectName}`;
-  const pending=p.parts.filter(pt=>!['done','outside'].includes(pt.status));
+  const pending=p.parts.filter(pt=>!effectiveDone(pt));
   const pendSec=document.getElementById('deliver-pending-section');
   const goodSec=document.getElementById('deliver-allgood');
   if(pending.length){
@@ -1845,7 +2119,7 @@ function openDeliverLoad(pid){
 function confirmDeliver(){
   const pid=document.getElementById('deliver-pid').value;
   const p=projects.find(x=>x.id===pid);if(!p)return;
-  const pending=p.parts.filter(pt=>!['done','outside'].includes(pt.status));
+  const pending=p.parts.filter(pt=>!effectiveDone(pt));
   if(pending.length){
     const choice=document.querySelector('input[name="dp-choice"]:checked')?.value;
     if(!choice){toast('Please choose what to do with pending W/Os');return;}
@@ -1900,13 +2174,105 @@ function applyTheme(){
 function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),3000);}
 function tick(){document.getElementById('clock').textContent=new Date().toLocaleTimeString('en-CA',{hour:'2-digit',minute:'2-digit'});}
 setInterval(tick,1000);tick();
+// ── IDLE DETECTION ────────────────────────────────────────────────────────────
+const IDLE_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
+let lastActivityTs = Date.now();
+let idleCheckTimer = null;
+let idleWasActive = false; // tracks if something was running when idle hit
+
+function resetIdleTimer(){
+  lastActivityTs = Date.now();
+}
+
+function startIdleDetection(){
+  // Listen for any user interaction
+  ['mousemove','mousedown','keydown','touchstart','scroll','click'].forEach(ev =>
+    document.addEventListener(ev, resetIdleTimer, {passive:true})
+  );
+  // Check every minute
+  if(idleCheckTimer)clearInterval(idleCheckTimer);
+  idleCheckTimer=setInterval(checkIdle, 60000);
+}
+
+function stopIdleDetection(){
+  if(idleCheckTimer){clearInterval(idleCheckTimer);idleCheckTimer=null;}
+}
+
+function checkIdle(){
+  if(!currentUser||currentUser.role==='guest')return;
+  const idleMs=Date.now()-lastActivityTs;
+  if(idleMs < IDLE_THRESHOLD_MS)return;
+
+  // Something is running?
+  const hasInprogress=projects.some(p=>p.parts.some(pt=>pt.assignedTo===currentUser.name&&pt.status==='inprogress'));
+  const hasActivity=!!getActiveActivity();
+  if(!hasInprogress&&!hasActivity)return;
+
+  // Auto-pause everything
+  idleWasActive=true;
+  const idleMin=Math.round(idleMs/60000);
+
+  if(hasInprogress){
+    projects.forEach(p=>{
+      p.parts.forEach(pt=>{
+        if(pt.assignedTo===currentUser.name&&pt.status==='inprogress'){
+          updatePt(p.id,pt.id,{status:'paused',log:logEvt('paused',`Auto-paused after ${idleMin}m idle`)});
+        }
+      });
+    });
+  }
+  if(hasActivity){
+    const acts=loadActivities();
+    acts.forEach(a=>{if(a.user===currentUser.name&&!a.endedAt)a.endedAt=Date.now()-idleMs;}); // backdate end to when idle started
+    saveActivities(acts);
+  }
+
+  render();renderMyWork();updateAWP();
+  showIdleAlert(idleMin);
+}
+
+function showIdleAlert(idleMin){
+  // Remove any existing alert
+  const ex=document.getElementById('idle-alert');if(ex)ex.remove();
+  const el=document.createElement('div');
+  el.id='idle-alert';
+  el.style.cssText=`position:fixed;top:70px;left:50%;transform:translateX(-50%);z-index:2000;background:var(--surface);border:1px solid var(--amber-dim);border-top:3px solid var(--amber);border-radius:var(--r10);padding:18px 22px;box-shadow:0 8px 32px rgba(0,0,0,.6);min-width:320px;max-width:420px;text-align:center;animation:slideDown .25s ease`;
+  el.innerHTML=`
+    <div style="font-size:14px;font-weight:600;font-family:var(--cond);margin-bottom:6px;color:var(--amber)">⏸ Auto-paused</div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:14px">You were away for <strong>${idleMin} minutes</strong>.<br>Your work was paused automatically.</div>
+    <button onclick="dismissIdleAlert()" style="background:var(--amber);color:#000;border:none;padding:8px 20px;cursor:pointer;font-size:12px;font-family:var(--cond);font-weight:700;letter-spacing:.5px;border-radius:var(--r4)">Got it</button>
+  `;
+  document.body.appendChild(el);
+  // Reset idle clock so it doesn't fire again immediately
+  resetIdleTimer();
+}
+
+function dismissIdleAlert(){
+  const el=document.getElementById('idle-alert');if(el)el.remove();
+}
+
 loadData();applyTheme();document.getElementById('login-page').classList.add('show');populateLogin();
+startIdleDetection();
 
 // ── PWA: SERVICE WORKER + INSTALL PROMPT ────────────────────────────────────
 let deferredInstallPrompt=null;
 
+// Register inline service worker via blob
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  const swCode=`
+    const CACHE='ve-scheduler-v1';
+    const ASSETS=['/'];
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+    self.addEventListener('fetch',e=>e.respondWith(
+      caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+        if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(e.request,clone));}
+        return res;
+      }).catch(()=>caches.match('/'))
+    ));
+  `;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
 }
 
 // Capture install prompt
