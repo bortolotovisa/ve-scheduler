@@ -153,16 +153,26 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .p4{background:#280a0a;border:1px solid #6a1a1a;color:#ff8080;}
 .p5{background:#0a2828;border:1px solid #1a6a6a;color:#60e0e0;}
 .pnone{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);}
-.abtn{background:none;border:1px solid;padding:4px 12px;cursor:pointer;font-size:11px;font-family:var(--cond);font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:var(--r4);transition:all .12s;white-space:nowrap;}
-.a-start{border-color:var(--amber-dim);color:var(--amber);}
-.a-start:hover{background:var(--amber-bg);}
-.a-pause{border-color:#604000;color:#b07820;}
-.a-pause:hover{background:#130d00;}
-.a-resume{border-color:var(--amber-dim);color:var(--amber);}
-.a-resume:hover{background:var(--amber-bg);}
-.a-done{border-color:var(--green-dim);color:var(--green);}
-.a-done:hover{background:var(--green-bg);}
-.a-reopen{border-color:var(--border2);color:var(--muted);}
+/* ── 3-TIER BUTTON SYSTEM ── */
+/* Tier 1: Primary — solid, main action per card */
+.btn-p{display:inline-flex;align-items:center;gap:7px;background:var(--amber);color:#000;border:none;padding:11px 22px;cursor:pointer;font-size:12px;font-family:var(--cond);font-weight:700;letter-spacing:.8px;text-transform:uppercase;border-radius:var(--r6);transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.btn-p:hover{opacity:.88;transform:translateY(-1px);box-shadow:0 4px 14px rgba(240,160,32,.3);}
+.btn-p.grn{background:var(--green);color:#fff;}.btn-p.grn:hover{box-shadow:0 4px 14px rgba(78,158,48,.3);}
+.btn-p.blu{background:var(--blue);color:#fff;}.btn-p.blu:hover{box-shadow:0 4px 14px rgba(74,159,232,.3);}
+.btn-p.red{background:var(--red);color:#fff;}.btn-p.red:hover{box-shadow:0 4px 14px rgba(224,64,64,.3);}
+/* Tier 2: Secondary — outlined, supporting action */
+.btn-s{display:inline-flex;align-items:center;gap:6px;background:none;border:1.5px solid var(--border3);color:var(--text2);padding:9px 18px;cursor:pointer;font-size:11px;font-family:var(--cond);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-radius:var(--r6);transition:all .15s;white-space:nowrap;flex-shrink:0;}
+.btn-s:hover{border-color:var(--text2);color:var(--text);}
+.btn-s.amb{border-color:var(--amber-dim);color:var(--amber);}.btn-s.amb:hover{background:var(--amber-bg);border-color:var(--amber);}
+.btn-s.grn{border-color:var(--green-dim);color:var(--green);}.btn-s.grn:hover{background:var(--green-bg);}
+/* Tier 3: Ghost — no border, text only */
+.btn-g{background:none;border:none;color:var(--muted);padding:6px 10px;cursor:pointer;font-size:11px;font-family:var(--cond);font-weight:600;letter-spacing:.3px;text-transform:uppercase;transition:color .12s;white-space:nowrap;flex-shrink:0;}
+.btn-g:hover{color:var(--text2);}
+.btn-g.amb{color:var(--amber-dim);}.btn-g.amb:hover{color:var(--amber);}
+/* Legacy compat — abtn kept for AWP popup */
+.abtn{background:none;border:1px solid;padding:6px 14px;cursor:pointer;font-size:11px;font-family:var(--cond);font-weight:700;letter-spacing:.5px;text-transform:uppercase;border-radius:var(--r4);transition:all .12s;white-space:nowrap;}
+.a-pause{border-color:var(--amber-dim);color:var(--amber);}.a-pause:hover{background:var(--amber-bg);}
+.a-done{border-color:var(--green-dim);color:var(--green);}.a-done:hover{background:var(--green-bg);}
 .a-log{border-color:var(--border);color:var(--muted2);font-size:9px;padding:3px 8px;}
 .ropts{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
 .rpill{background:none;border:1px solid var(--border2);color:var(--muted);padding:5px 13px;cursor:pointer;font-size:11px;font-family:var(--cond);font-weight:600;letter-spacing:.5px;text-transform:uppercase;border-radius:var(--r4);transition:all .12s;}
@@ -187,15 +197,15 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .sec-hdr{font-size:9px;text-transform:uppercase;letter-spacing:2.5px;color:var(--muted);font-family:var(--cond);font-weight:700;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;}
 .sec-hdr.al{color:var(--red);}
 .sec-hdr.wk{color:var(--amber);}
-.mwcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r10);padding:13px 15px;margin-bottom:8px;border-left:3px solid var(--border2);transition:all .15s;}
+.mwcard{background:var(--surface);border:1px solid var(--border);border-radius:var(--r10);padding:16px 18px;margin-bottom:10px;border-left:3px solid var(--border2);transition:all .15s;}
 .mwcard.wk{border-left-color:var(--amber);}
 .mwcard.ov{border-left-color:var(--red);background:rgba(224,64,64,.03);}
-.mwcard.pa{border-left-color:#b07820;}
-.mwcard.ip{border-left-color:var(--amber);background:var(--amber-glow);}
-.mwcard.dn{opacity:.4;border-left-color:var(--green);}
+.mwcard.pa{border-left-color:#c09020;background:#0d0900;}
+.mwcard.ip{border-left-color:var(--amber);background:rgba(240,160,32,.05);box-shadow:inset 3px 0 0 var(--amber);}
+.mwcard.dn{opacity:.35;border-left-color:var(--green);filter:grayscale(.3);}
 .mwcard-top{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:9px;}
 .mw-proj{font-size:10px;color:var(--muted);margin-bottom:3px;display:flex;align-items:center;gap:6px;}
-.mw-part{font-size:13px;font-weight:500;line-height:1.3;}
+.mw-part{font-size:14px;font-weight:600;line-height:1.3;letter-spacing:.1px;}
 .mw-wo{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:3px;}
 .mw-notes{font-size:11px;color:var(--muted);margin-top:4px;font-style:italic;}
 .mw-acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:9px;align-items:center;}
@@ -379,8 +389,28 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       <div id="sched-body"></div>
     </div>
     <div id="view-programming" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;flex-wrap:wrap;gap:8px">
         <div id="prog-toolbar" style="display:flex;gap:8px"></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap" id="prog-filters">
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap">
+          <span class="filter-label">Assigned:</span>
+          <button class="pill active" id="pf-all" onclick="setProgFilter('user','all',this)">All</button>
+          <button class="pill" id="pf-none" onclick="setProgFilter('user','__none__',this)">Unassigned</button>
+          <span id="pf-users"></span>
+        </div>
+        <div style="display:flex;gap:4px;align-items:center;flex-wrap:wrap;margin-left:12px;border-left:1px solid var(--border2);padding-left:12px">
+          <span class="filter-label">Status:</span>
+          <button class="pill active" id="ps-all" onclick="setProgFilter('status','all',this)">All</button>
+          <button class="pill" id="ps-nowo" onclick="setProgFilter('status','nowo',this)">No W/O</button>
+          <button class="pill" id="ps-drawing" onclick="setProgFilter('status','drawing',this)">Drawing OK</button>
+          <button class="pill" id="ps-inprogress" onclick="setProgFilter('status','inprogress',this)">In Progress</button>
+          <button class="pill" id="ps-done" onclick="setProgFilter('status','done',this)">Done</button>
+        </div>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:8px">
+          <span id="prog-selection-info" style="font-size:11px;color:var(--muted);display:none"></span>
+          <button id="prog-bulk-btn" class="hdr-btn" style="display:none;color:var(--amber);border-color:var(--amber-dim)" onclick="openBulkModal()">Assign selected</button>
+        </div>
       </div>
       <div class="prog-wrap">
         <table class="prog-table">
@@ -468,7 +498,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
     <input type="hidden" id="part-edit-pid"><input type="hidden" id="part-edit-id"><input type="hidden" id="part-context">
     <label class="fl">W/O Number</label><input class="fi" id="part-wo" placeholder="e.g. W53326/W" oninput="this.value=this.value.toUpperCase()">
     <label class="fl">Part Description</label><input class="fi" id="part-desc" placeholder="e.g. 109981-00 - DOUBLE DE-TAGGER">
-    <div id="part-status-section"><label class="fl">Status</label><select class="fs" id="part-status"><option value="nowo">No W/O</option><option value="drawing">Drawing OK</option><option value="outside">Outside</option><option value="unknown">Unknown</option></select></div>
+    <div id="part-status-section"><label class="fl">Status</label><select class="fs" id="part-status"><option value="nowo">No W/O</option><option value="drawing">Drawing OK</option><option value="unknown">Unknown</option></select></div>
     <div id="part-due-section"><label class="fl">Due Date <span style="color:var(--muted);font-weight:400;text-transform:none;letter-spacing:0">(optional — overrides Load)</span></label><input class="fi" id="part-due" type="date" style="color-scheme:dark light"></div>
     <div class="modal-actions"><button class="btn-ok" onclick="savePart()">Save</button><button class="btn-cancel" onclick="closeMod('part')">Cancel</button></div>
   </div>
@@ -566,6 +596,34 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
   </div>
 </div>
 
+<!-- MODAL: BULK ASSIGN/STATUS -->
+<div class="moverlay" id="mod-bulk" onclick="if(event.target===this)closeMod('bulk')">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-title">Update Selected Parts</div>
+    <div class="modal-sub"><span id="bulk-count">0</span> parts selected</div>
+    <label class="fl">Assign to</label>
+    <select class="fs" id="bulk-assign-sel"></select>
+    <label class="fl">Change status</label>
+    <select class="fs" id="bulk-status-sel"></select>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="confirmBulk()">Apply</button>
+      <button class="btn-cancel" onclick="closeMod('bulk')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: WHAT'S DUE TODAY -->
+<div class="moverlay" id="mod-duetoday" onclick="if(event.target===this)closeMod('duetoday')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-title">👋 Good morning!</div>
+    <div class="modal-sub" id="duetoday-sub"></div>
+    <div id="duetoday-body"></div>
+    <div class="modal-actions">
+      <button class="btn-ok" onclick="closeMod('duetoday')">Let's go</button>
+    </div>
+  </div>
+</div>
+
 <div class="awp" id="awp">
   <div class="awp-lbl"><div class="awp-dot"></div> Currently working on</div>
   <div class="awp-part" id="awp-part"></div>
@@ -625,6 +683,16 @@ function loadData(){
     {id:'4',name:'Viewer',pw:'ve2026',color:'p3',role:'viewer',tabs:['dashboard']}
   ];
   if(!projects.length)loadSampleData();
+  // Migrate: status='outside' → isOutside flag + real status
+  let migrated=false;
+  projects.forEach(p=>p.parts.forEach(pt=>{
+    if(pt.status==='outside'){
+      pt.isOutside=true;
+      pt.status=pt.assignedTo?'drawing':'done';
+      migrated=true;
+    }
+  }));
+  if(migrated)save();
 }
 function loadSampleData(){
   projects=parseDSF(`CLIENT,PROJECT,DUE DATE
@@ -726,13 +794,139 @@ function doLogout(){
   document.getElementById('login-page').classList.add('show');
   populateLogin();
 }
+
+
+function checkWorkloadBalance(){
+  if(!currentUser||currentUser.role!=='manager')return;
+  const counts={};
+  projects.forEach(p=>p.parts.forEach(pt=>{
+    if(pt.assignedTo&&!effectiveDone(pt)){
+      counts[pt.assignedTo]=(counts[pt.assignedTo]||0)+1;
+    }
+  }));
+  const vals=Object.values(counts);
+  if(vals.length<2)return;
+  const max=Math.max(...vals),min=Math.min(...vals);
+  if(max-min>=5){
+    const maxPerson=Object.entries(counts).find(([,v])=>v===max)?.[0];
+    const minPerson=Object.entries(counts).find(([,v])=>v===min)?.[0];
+    showBalanceWarning(maxPerson,max,minPerson,min);
+  } else {
+    const el=document.getElementById('balance-badge');if(el)el.remove();
+  }
+}
+function showBalanceWarning(heavy,heavyN,light,lightN){
+  let badge=document.getElementById('balance-badge');
+  if(!badge){
+    badge=document.createElement('div');
+    badge.id='balance-badge';
+    badge.style.cssText='display:flex;align-items:center;gap:6px;padding:4px 10px;background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:var(--r4);font-size:11px;color:var(--amber);font-family:var(--cond);font-weight:600;cursor:pointer;white-space:nowrap;margin-right:4px';
+    badge.onclick=()=>{setProgFilter('user',heavy,document.getElementById('pf-all'));setView('programming');badge.remove();};
+    const hdrRight=document.getElementById('hdr-user')?.parentElement;
+    if(hdrRight)hdrRight.insertBefore(badge,hdrRight.firstChild);
+  }
+  badge.innerHTML=`⚖ ${heavy}: ${heavyN} parts vs ${light}: ${lightN}`;
+  badge.title='Click to filter Programming by '+heavy;
+}
+
+function showDueTodayIfNeeded(){
+  if(!currentUser||currentUser.role==='guest')return;
+  const now=new Date();now.setHours(0,0,0,0);
+  const we=new Date(now);we.setDate(we.getDate()+2); // today + tomorrow
+  
+  // Parts assigned to me that are due soon
+  const myParts=[];
+  projects.forEach(p=>{
+    const due=p.dueDate?new Date(p.dueDate):null;
+    if(!due)return;
+    due.setHours(0,0,0,0);
+    const daysLeft=Math.ceil((due-now)/86400000);
+    if(daysLeft>2||daysLeft<-3)return; // only show -3 to +2 days
+    p.parts.filter(pt=>pt.assignedTo===currentUser.name&&!effectiveDone(pt)).forEach(pt=>{
+      myParts.push({...pt,projectName:p.projectName,client:p.client,daysLeft,dueStr:p.dueStr});
+    });
+  });
+  
+  // Overdue loads (all, not just mine — for PM/manager)
+  const overdueLoads=projects.filter(p=>{
+    if(!p.dueDate)return false;
+    const d=new Date(p.dueDate);d.setHours(0,0,0,0);
+    return d<now&&!p.parts.every(pt=>effectiveDone(pt));
+  });
+  
+  const todayLoads=projects.filter(p=>{
+    if(!p.dueDate)return false;
+    const d=new Date(p.dueDate);d.setHours(0,0,0,0);
+    return d.getTime()===now.getTime();
+  });
+
+  const isManager=['manager','projectmanager'].includes(currentUser.role);
+  
+  if(!myParts.length&&!overdueLoads.length&&!todayLoads.length)return;
+  
+  const greeting=now.getHours()<12?'Good morning':'Good afternoon';
+  document.getElementById('duetoday-sub').textContent=
+    `${greeting}, ${currentUser.name} — here's what needs attention today`;
+  
+  let html='';
+  
+  if(myParts.length){
+    html+=`<div style="margin-bottom:14px">
+      <div class="sec-hdr wk" style="margin-bottom:8px">Your parts due soon (${myParts.length})</div>`;
+    html+=myParts.map(pt=>{
+      const col=pt.daysLeft<0?'var(--red)':pt.daysLeft===0?'var(--amber)':'var(--blue)';
+      const label=pt.daysLeft<0?`${Math.abs(pt.daysLeft)}d overdue`:pt.daysLeft===0?'Due today':`Due in ${pt.daysLeft}d`;
+      return`<div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--border)">
+        <span style="font-size:10px;font-family:var(--mono);color:${col};min-width:80px">${label}</span>
+        <div style="flex:1"><div style="font-size:12px;font-weight:500">${pt.desc}</div>
+        <div style="font-size:10px;color:var(--muted)">${pt.client} · ${pt.projectName}</div></div>
+        ${sbadge(pt.status)}
+      </div>`;
+    }).join('');
+    html+='</div>';
+  }
+  
+  if(isManager&&overdueLoads.length){
+    html+=`<div style="margin-bottom:14px">
+      <div class="sec-hdr al" style="margin-bottom:8px">⚠ Overdue loads (${overdueLoads.length})</div>`;
+    html+=overdueLoads.slice(0,5).map(p=>{
+      const d=dl(p.dueDate);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span class="cbadge ${cbadge(p.client)}">${p.client}</span>
+        <div style="flex:1;font-size:12px">${p.projectName}</div>
+        <span class="due-chip dc-ov" style="font-size:10px">${Math.abs(d)}d overdue</span>
+      </div>`;
+    }).join('');
+    html+='</div>';
+  }
+  
+  if(isManager&&todayLoads.length){
+    html+=`<div style="margin-bottom:8px">
+      <div class="sec-hdr wk" style="margin-bottom:8px">Due today (${todayLoads.length})</div>`;
+    html+=todayLoads.map(p=>{
+      const{done,tot}=prog(p);
+      return`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
+        <span class="cbadge ${cbadge(p.client)}">${p.client}</span>
+        <div style="flex:1;font-size:12px">${p.projectName}</div>
+        <span style="font-size:11px;color:var(--muted)">${done}/${tot} done</span>
+      </div>`;
+    }).join('');
+    html+='</div>';
+  }
+  
+  document.getElementById('duetoday-body').innerHTML=html;
+  openMod('duetoday');
+}
+
 function bootApp(){
   document.getElementById('login-page').classList.remove('show');
   document.getElementById('app').style.display='block';
   setupNav();setupHeader();renderSummary();
   const perms=getPerms(currentUser);
   setView(perms.tabs[0]);
-  updateAWP(); // restore active work popup if there's an in-progress part
+  updateAWP();
+  setTimeout(showDueTodayIfNeeded, 400);
+  setTimeout(checkWorkloadBalance, 500);
 }
 function getMyWorkBadge(){
   if(!currentUser||currentUser.role==='guest')return'';
@@ -785,21 +979,14 @@ function dl(dueDate){
   return Math.ceil((due-now)/86400000);
 }
 function urgency(p){const d=dl(p.dueDate);if(d===null)return'far';if(d<0)return'overdue';if(d<=7)return'urgent';if(d<=21)return'soon';return'far';}
-function prog(p){const tot=p.parts.length;if(!tot)return{done:0,tot:0,pct:0};const done=p.parts.filter(pt=>effectiveDone(pt)).length;return{done,tot,pct:Math.round(done/tot*100)};}
+function prog(p){const tot=p.parts.length;if(!tot)return{done:0,tot:0,pct:0};const done=p.parts.filter(pt=>pt.status==='done').length;return{done,tot,pct:Math.round(done/tot*100)};}
 
 // outside + assigned → acts like drawing (person has work to do)
 // outside + unassigned → acts like done (nothing pending)
-function effectiveStatus(pt){
-  if(pt.status==='outside'){
-    return pt.assignedTo?'drawing':'done';
-  }
-  return pt.status;
-}
-// Shorthand: is this part considered "complete" for progress/filtering?
-function effectiveDone(pt){
-  const es=effectiveStatus(pt);
-  return es==='done'||es==='outside'&&!pt.assignedTo;
-}
+// Outside is now a FLAG (pt.isOutside=true), not a status
+// effectiveStatus just returns pt.status — no hidden rules
+function effectiveStatus(pt){ return pt.status; }
+function effectiveDone(pt){ return pt.status==='done'; }
 function fmtTs(ts){return new Date(ts).toLocaleString('en-CA',{month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'});}
 function fmtDur(ms){if(!ms||ms<0)ms=0;const h=Math.floor(ms/3600000),m=Math.floor((ms%3600000)/60000);return h?`${h}h ${m}m`:`${m}m`;}
 function timeBreakdown(log){
@@ -831,7 +1018,11 @@ function cbadge(c){
   if(c.startsWith('SNIP'))return'bSNIPES';if(c.startsWith('ESTE'))return'bESTEE';
   if(c.startsWith('CLIN'))return'bCLINIQUE';return'bOTHER';
 }
-function sbadge(s){return`<span class="sbadge ${SC[s]||'s-unknown'}">${SL[s]||'?'}</span>`;}
+function sbadge(s,outside=false){
+  const badge=`<span class="sbadge ${SC[s]||'s-unknown'}">${SL[s]||'?'}</span>`;
+  const outBadge=outside?`<span class="sbadge" style="background:var(--purple-bg);border-color:var(--purple-dim);color:var(--purple);margin-left:4px">OUTSIDE</span>`:'';
+  return badge+outBadge;
+}
 function uc(name){const u=users.find(x=>x.name===name);return u?u.color:'pnone';}
 function logEvt(action,reason=''){return{ts:Date.now(),action,reason,user:currentUser?.name||'system'};}
 function canEdit(){return currentUser&&(getPerms(currentUser).tabs.includes('schedule')||getPerms(currentUser).tabs.includes('programming'))&&currentUser.role!=='programmer';}
@@ -871,30 +1062,81 @@ function isLoad(row){
 function normSt(s){
   s=(s||'').trim().toLowerCase();
   if(s==='done')return'done';if(s.includes('drawing ok'))return'drawing';
-  if(s==='outside')return'outside';if(s.includes('no w/o')||s==='no w')return'nowo';
+  if(s==='outside')return'__outside__';if(s.includes('no w/o')||s==='no w')return'nowo';
   if(s.includes('in progress'))return'inprogress';return'unknown';
+}
+function parseCompletionDate(str){
+  if(!str||!str.trim())return null;
+  str=str.trim();
+  if(/^\d{4}-\d{2}-\d{2}$/.test(str))return new Date(str+'T12:00:00').getTime();
+  const pts=str.split('/');
+  if(pts.length===3){
+    const[a,b,yr]=pts.map(Number);
+    if(a>12)return new Date(yr,b-1,a,12,0,0).getTime();
+    return new Date(yr,a-1,b,12,0,0).getTime();
+  }
+  const d=parseDate(str);return d?d.getTime():null;
 }
 function parseDSF(text){
   const rows=parseCSV(text);const result=[];let cur=null,pid=0;
   for(const row of rows){
     if((row[0]||'').toUpperCase()==='CLIENT')continue;if(!(row[0]||'').trim())continue;
     if(isLoad(row)){cur={id:'p'+(pid++),client:(row[0]||'').trim().toUpperCase(),projectName:(row[1]||'').trim(),dueStr:(row[2]||'').trim(),dueDate:parseDate((row[2]||'').trim()),parts:[],dateHistory:[]};result.push(cur);}
-    else if(cur){const wo=(row[0]||'').trim(),desc=(row[1]||'').trim();
-      if(desc)cur.parts.push({id:cur.id+'_'+cur.parts.length,wo,desc,status:normSt(row[2]||''),assignedTo:null,log:[],notes:''});}
+    else if(cur){
+      const wo=(row[0]||'').trim(),desc=(row[1]||'').trim();
+      if(desc){
+        const st=normSt(row[2]||'');
+        const isOut=st==='__outside__';
+        const status=isOut?'drawing':st;
+        const completionTs=parseCompletionDate(row[3]||'');
+        const log=[];
+        if(status==='done'){
+          log.push({ts:completionTs||Date.now(),action:'done',reason:completionTs?'Imported from CSV':'Imported as done (no date)',user:'csv-import'});
+        }
+        cur.parts.push({id:cur.id+'_'+cur.parts.length,wo,desc,status,isOutside:isOut,assignedTo:null,log,notes:'',completedAt:completionTs||null});
+      }
+    }
   }
   return result;
 }
 function smartMerge(incoming){
-  const pm={};projects.forEach(p=>p.parts.forEach(pt=>{pm[pt.wo+'|'+pt.desc]={status:pt.status,assignedTo:pt.assignedTo,log:pt.log||[],notes:pt.notes||''};}));
+  const pm={};
+  projects.forEach(p=>p.parts.forEach(pt=>{
+    pm[pt.wo+'|'+pt.desc]={status:pt.status,assignedTo:pt.assignedTo,log:pt.log||[],notes:pt.notes||'',completedAt:pt.completedAt||null,isOutside:pt.isOutside||false};
+  }));
   const lm={};projects.forEach(p=>{lm[p.client+'|'+p.projectName]=p;});
   let newL=0,newP=0,upD=0;
   const merged=incoming.map(inc=>{
     const key=inc.client+'|'+inc.projectName,ex=lm[key];
     if(ex){
       if(inc.dueStr!==ex.dueStr){if(!ex.dateHistory)ex.dateHistory=[];ex.dateHistory.push({from:ex.dueStr,to:inc.dueStr,changedAt:Date.now(),changedBy:'CSV import'});ex.dueStr=inc.dueStr;ex.dueDate=inc.dueDate;upD++;}
-      inc.parts.forEach(ip=>{const pk=ip.wo+'|'+ip.desc;if(!pm[pk]){ex.parts.push({...ip,id:ex.id+'_'+ex.parts.length,log:[],notes:''});newP++;}});
+      inc.parts.forEach(ip=>{
+        const pk=ip.wo+'|'+ip.desc;
+        if(!pm[pk]){
+          ex.parts.push({...ip,id:ex.id+'_'+ex.parts.length});newP++;
+        } else {
+          // Part exists — merge completion date if CSV has one and system doesn't
+          const existing=ex.parts.find(pt=>pt.wo+'|'+pt.desc===pk);
+          if(existing&&ip.completedAt&&!existing.completedAt){
+            existing.completedAt=ip.completedAt;
+            // Add done log entry if not already present
+            const hasDone=(existing.log||[]).some(e=>e.action==='done');
+            if(!hasDone)existing.log.push({ts:ip.completedAt,action:'done',reason:'Completion date from CSV',user:'csv-import'});
+          }
+          // Update status if CSV says done and system doesn't
+          if(existing&&ip.status==='done'&&existing.status!=='done'){
+            existing.status='done';
+          }
+        }
+      });
       return ex;
-    }else{newL++;return{...inc,parts:inc.parts.map(pt=>{const pk=pt.wo+'|'+pt.desc;const prev=pm[pk];return prev?{...pt,...prev}:pt;})};}
+    }else{
+      newL++;
+      return{...inc,parts:inc.parts.map(pt=>{
+        const pk=pt.wo+'|'+pt.desc;const prev=pm[pk];
+        return prev?{...pt,...prev,completedAt:prev.completedAt||pt.completedAt}:pt;
+      })};
+    }
   });
   projects.forEach(p=>{const key=p.client+'|'+p.projectName;if(!incoming.find(i=>i.client+'|'+i.projectName===key))merged.push(p);});
   return{merged,newL,newP,upD};
@@ -944,7 +1186,7 @@ function assignPt(pid,partId,name){
   const p=projects.find(x=>x.id===pid);
   const pt=p?.parts.find(x=>x.id===partId);
   if(pt){pt.assignedTo=name||null;if(name)pt.assignedAt=Date.now();}
-  save();renderProg();setupNav();toast(name?`Assigned to ${name}`:'Unassigned');
+  save();renderProg();setupNav();checkWorkloadBalance();toast(name?`Assigned to ${name}`:'Unassigned');
 }
 function setStatus(pid,partId,status){updatePt(pid,partId,{status});render();toast('Status updated');}
 function saveNotes(pid,partId,notes){updatePt(pid,partId,{notes});toast('Notes saved');}
@@ -981,8 +1223,7 @@ function filterNextModal(){
     // Bug 2: exclude inprogress (already being worked on by someone else)
     // Bug 3: only show parts assigned to current user OR unassigned
     if(pt.id===pauseModalPartId)return;
-    const es=effectiveStatus(pt);
-    if(['done','nowo','inprogress'].includes(es))return;
+    if(['done','nowo','inprogress'].includes(pt.status))return;
     if(pt.assignedTo&&pt.assignedTo!==currentUser?.name)return;
     cands.push({...pt,projectName:p.projectName,client:p.client,pid:p.id});
   });});
@@ -1019,6 +1260,50 @@ function confirmPauseModal(){
   pausePt(pid,partId,r,next);
 }
 function openReopen(pid,partId){reopenOpenId=partId;pauseOpenId=null;renderMyWork();}
+function startWOEdit(pid,partId,el){
+  const current=el.textContent==='—'?'':el.textContent;
+  const inp=document.createElement('input');
+  inp.value=current;
+  inp.style.cssText='background:var(--surface2);border:1px solid var(--amber);color:var(--text);padding:2px 6px;border-radius:3px;font-family:var(--mono);font-size:11px;width:90px;outline:none;';
+  el.replaceWith(inp);
+  inp.focus();inp.select();
+  function save(){
+    const val=(inp.value||'').trim().toUpperCase();
+    const p=projects.find(x=>x.id===pid);
+    const pt=p?.parts.find(x=>x.id===partId);
+    if(pt)pt.wo=val;
+    save_data();
+    const span=document.createElement('span');
+    span.className='wo';span.title='Click to edit W/O number';
+    span.style.cssText='cursor:pointer;border-bottom:1px dashed var(--border2)';
+    span.textContent=val||'—';
+    span.onclick=()=>startWOEdit(pid,partId,span);
+    inp.replaceWith(span);
+    if(val!==current)toast('W/O updated ✓');
+  }
+  inp.addEventListener('blur',save);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=current;inp.blur();}});
+}
+function save_data(){save();} // alias to avoid naming conflict inside startWOEdit
+function toggleOutside(pid,partId){
+  const p=projects.find(x=>x.id===pid);
+  const pt=p?.parts.find(x=>x.id===partId);
+  if(!pt)return;
+  pt.isOutside=!pt.isOutside;
+  save();renderProg();renderSchedule();renderDash();
+  toast(pt.isOutside?'Marked as Outside':'Outside flag removed');
+}
+
+function dismissOutside(pid,partId){
+  // Unassign — removes from My Work, doesn't count as done or in stats
+  const p=projects.find(x=>x.id===pid);
+  const pt=p?.parts.find(x=>x.id===partId);
+  if(!pt)return;
+  pt.assignedTo=null;
+  pt.assignedAt=null;
+  save();renderMyWork();render();setupNav();
+  toast('Removed from your list');
+}
 function cancelReopen(){reopenOpenId=null;renderMyWork();}
 
 function reopenPickerHTML(id,pid,partId){
@@ -1060,10 +1345,10 @@ function logHTML(pt){
 function renderSummary(){
   const now=new Date();now.setHours(0,0,0,0);const we=new Date(now);we.setDate(we.getDate()+7);
   const all=projects.flatMap(p=>p.parts);
-  const overdue=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d<now&&!p.parts.every(pt=>effectiveDone(pt));}).length;
+  const overdue=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d<now&&!p.parts.every(pt=>pt.status==='done');}).length;
   const thisWeek=projects.filter(p=>{if(!p.dueDate)return false;const d=new Date(p.dueDate);d.setHours(0,0,0,0);return d>=now&&d<=we;}).length;
   const wl={};
-  all.filter(pt=>pt.assignedTo&&!effectiveDone(pt)).forEach(pt=>{if(!wl[pt.assignedTo])wl[pt.assignedTo]={total:0};wl[pt.assignedTo].total++;});
+  all.filter(pt=>pt.assignedTo&&pt.status!=='done').forEach(pt=>{if(!wl[pt.assignedTo])wl[pt.assignedTo]={total:0};wl[pt.assignedTo].total++;});
   const wItems=Object.entries(wl).map(([n,w])=>`<div class="sum-item"><span class="pchip ${uc(n)}">${n}</span><span class="sum-val">${w.total}</span><span style="color:var(--muted)">parts</span></div>`).join('');
   document.getElementById('summary-banner').innerHTML=`
     <div class="sum-date">${new Date().toLocaleDateString('en-CA',{weekday:'long',month:'long',day:'numeric'})}</div>
@@ -1080,8 +1365,8 @@ function filtered(){
   if(filterMode==='overdue')list=list.filter(p=>urgency(p)==='overdue');
   else if(filterMode==='week')list=list.filter(p=>urgency(p)==='urgent');
   else if(filterMode==='nowo')list=list.filter(p=>p.parts.filter(pt=>pt.status==='nowo').length>0);
-  else if(filterMode==='outside')list=list.filter(p=>p.parts.some(pt=>pt.status==='outside'));
-  else if(filterMode==='done')list=list.filter(p=>p.parts.every(pt=>effectiveDone(pt)));
+  else if(filterMode==='outside')list=list.filter(p=>p.parts.some(pt=>pt.isOutside));
+  else if(filterMode==='done')list=list.filter(p=>p.parts.every(pt=>pt.status==='done'));
   if(searchStr){const s=searchStr.toLowerCase();list=list.filter(p=>p.client.toLowerCase().includes(s)||p.projectName.toLowerCase().includes(s)||p.parts.some(pt=>pt.wo.toLowerCase().includes(s)||pt.desc.toLowerCase().includes(s)));}
   return list;
 }
@@ -1089,10 +1374,10 @@ function renderDash(){
   const all=projects.flatMap(p=>p.parts);
   document.getElementById('s-total').textContent=projects.length;
   document.getElementById('s-nowo').textContent=all.filter(pt=>pt.status==='nowo').length;
-  document.getElementById('s-drawing').textContent=all.filter(pt=>effectiveStatus(pt)==='drawing').length;
+  document.getElementById('s-drawing').textContent=all.filter(pt=>pt.status==='drawing').length;
   document.getElementById('s-prog').textContent=all.filter(pt=>['inprogress','paused'].includes(pt.status)).length;
-  document.getElementById('s-out').textContent=all.filter(pt=>pt.status==='outside'&&!pt.assignedTo).length;
-  document.getElementById('s-done').textContent=all.filter(pt=>effectiveDone(pt)).length;
+  document.getElementById('s-out').textContent=all.filter(pt=>pt.isOutside).length;
+  document.getElementById('s-done').textContent=all.filter(pt=>pt.status==='done').length;
   document.getElementById('s-delivered').textContent=projects.filter(p=>p.delivered).length;
   const list=filtered(),con=document.getElementById('dash-list');
   if(!list.length){con.innerHTML=`<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:15px">${!projects.length?'No data yet':'No matches'}</div></div>`;return;}
@@ -1102,7 +1387,7 @@ function renderDash(){
     const rc=u==='overdue'?'var(--red)':u==='urgent'?'var(--amber)':'var(--blue)';
     const[dlTxt,dcc]=dueChip(d,p.dueStr);
     const cardCls=u==='overdue'?'overdue':u==='urgent'?'urgent':u==='soon'?'on-track':'';
-    const n=p.parts.filter(pt=>pt.status==='nowo').length,dr=p.parts.filter(pt=>effectiveStatus(pt)==='drawing').length;
+    const n=p.parts.filter(pt=>pt.status==='nowo').length,dr=p.parts.filter(pt=>pt.status==='drawing').length;
     const asgn=[...new Set(p.parts.filter(pt=>pt.assignedTo).map(pt=>pt.assignedTo))];
     const chips=asgn.map(nm=>`<span class="pchip ${uc(nm)}">${nm}</span>`).join('');
     const dhc=p.dateHistory?.length||0;
@@ -1141,12 +1426,76 @@ function showDH(evt,pid){
   document.getElementById('dh-body').innerHTML=hist.length?hist.map(h=>`<div class="dh-entry"><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">${fmtTs(h.changedAt)}</span><br><span style="color:var(--red)">${h.from}</span> → <span style="color:var(--green)">${h.to}</span><span style="color:var(--muted2);font-size:10px;margin-left:8px">by ${h.changedBy}</span></div>`).join(''):`<div style="color:var(--muted);font-size:12px">No changes recorded yet.</div>`;
   openMod('dh');
 }
+function setProgFilter(type,val,btn){
+  if(type==='user'){progFilterUser=val;document.querySelectorAll('[id^="pf-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  if(type==='status'){progFilterStatus=val;document.querySelectorAll('[id^="ps-"]').forEach(b=>b.classList.remove('active'));btn.classList.add('active');}
+  selectedParts.clear();
+  renderProg();
+}
+function updateProgUserPills(){
+  const el=document.getElementById('pf-users');if(!el)return;
+  el.innerHTML=users.filter(u=>u.role!=='viewer').map(u=>
+    `<button class="pill ${progFilterUser===u.name?'active':''}" onclick="setProgFilter('user','${u.name}',this)">${u.name}</button>`
+  ).join('');
+}
+function partPassesFilter(pt){
+  if(progFilterUser!=='all'){
+    if(progFilterUser==='__none__'&&pt.assignedTo)return false;
+    if(progFilterUser!=='__none__'&&pt.assignedTo!==progFilterUser)return false;
+  }
+  if(progFilterStatus!=='all'&&pt.status!==progFilterStatus)return false;
+  return true;
+}
+function togglePartSelect(partId,pid){
+  const key=pid+'|'+partId;
+  if(selectedParts.has(key))selectedParts.delete(key);
+  else selectedParts.add(key);
+  updateSelectionUI();
+}
+function updateSelectionUI(){
+  const n=selectedParts.size;
+  const info=document.getElementById('prog-selection-info');
+  const btn=document.getElementById('prog-bulk-btn');
+  if(info)info.style.display=n?'':'none';
+  if(info)info.textContent=n+' part'+(n!==1?'s':'')+' selected';
+  if(btn)btn.style.display=n&&canEdit()?'':'none';
+}
+function openBulkModal(){
+  if(!selectedParts.size)return;
+  const aopts=`<option value="">— Unassigned —</option>`+users.map(u=>`<option value="${u.name}">${u.name}</option>`).join('');
+  const statusOpts=[['nowo','No W/O'],['drawing','Drawing OK'],['inprogress','In Progress'],['done','Done']].map(([v,l])=>`<option value="${v}">${l}</option>`).join('');
+  document.getElementById('bulk-count').textContent=selectedParts.size;
+  document.getElementById('bulk-assign-sel').innerHTML=aopts;
+  document.getElementById('bulk-status-sel').innerHTML='<option value="">— Keep current —</option>'+statusOpts;
+  openMod('bulk');
+}
+function confirmBulk(){
+  const assignee=document.getElementById('bulk-assign-sel').value;
+  const status=document.getElementById('bulk-status-sel').value;
+  if(!assignee&&!status){toast('Choose at least one action');return;}
+  const now=Date.now();
+  selectedParts.forEach(key=>{
+    const[pid,partId]=key.split('|');
+    const p=projects.find(x=>x.id===pid);
+    const pt=p?.parts.find(x=>x.id===partId);
+    if(!pt)return;
+    if(assignee!==undefined&&assignee!==null){pt.assignedTo=assignee||null;if(assignee)pt.assignedAt=now;}
+    if(status)pt.status=status;
+  });
+  save();selectedParts.clear();closeMod('bulk');renderProg();render();setupNav();checkWorkloadBalance();
+  toast(`Updated ${selectedParts.size||'selected'} parts ✓`);
+}
 function renderProg(){
+  updateProgUserPills();
   const tbody=document.getElementById('prog-tbody');
-  if(!projects.length){tbody.innerHTML=`<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:40px">Import CSV or create loads in Schedule</td></tr>`;return;}
+  if(!projects.length){tbody.innerHTML=`<tr><td colspan="11" style="text-align:center;color:var(--muted);padding:40px">Import CSV or create loads in Schedule</td></tr>`;return;}
   const sorted=[...projects].sort((a,b)=>(dl(a.dueDate)??9999)-(dl(b.dueDate)??9999));
   let html='';
   sorted.forEach(p=>{
+    // Filter: only show load if any parts pass filter
+    const visibleParts=p.parts.filter(pt=>partPassesFilter(pt));
+    const isFiltered=progFilterUser!=='all'||progFilterStatus!=='all';
+    if(isFiltered&&!visibleParts.length)return;
     const d=dl(p.dueDate);
     const isCollapsed=collapsedLoads.has(p.id);const chev=isCollapsed?'▶':'▼';
     const[dlTxt,dcc]=dueChip(d,p.dueStr);
@@ -1155,6 +1504,7 @@ function renderProg(){
     const editBtns=canEdit()?ddLoad(p.id):'';
     html+=`<tr id="pcard-${p.id}" data-pid="${p.id}" class="grow" style="cursor:pointer" onclick="toggleLoad('${p.id}')">
       <td><span style="color:var(--muted);font-size:10px">${chev}</span></td>
+      <td></td>
       <td><span class="cbadge ${cbadge(p.client)}">${p.client}</span></td>
       <td colspan="2"><strong>${p.projectName}</strong>${dhc?` <button class="dh-btn" onclick="showDH(event,'${p.id}')" style="margin-left:6px">${dhc}x</button>`:''}<span onclick="event.stopPropagation()" style="margin-left:8px">${editBtns}</span></td>
       <td><span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span></td>
@@ -1162,13 +1512,17 @@ function renderProg(){
       <td></td><td></td><td></td><td></td>
     </tr>`;
     if(!isCollapsed){
-      p.parts.forEach(pt=>{
-        const stOpts=[['nowo','No W/O'],['drawing','Drawing OK'],['inprogress','In Progress'],['paused','Paused'],['done','Done'],['outside','Outside']].map(([v,l])=>`<option value="${v}" ${pt.status===v?'selected':''}>${l}</option>`).join('');
+      const partsToShow=isFiltered?visibleParts:p.parts;
+      partsToShow.forEach(pt=>{
+        const stOpts=[['nowo','No W/O'],['drawing','Drawing OK'],['inprogress','In Progress'],['paused','Paused'],['done','Done']].map(([v,l])=>`<option value="${v}" ${pt.status===v?'selected':''}>${l}</option>`).join('');
         const aopts=`<option value="">— Unassigned —</option>`+users.map(u=>`<option value="${u.name}" ${pt.assignedTo===u.name?'selected':''}>${u.name}</option>`).join('');
         const showLog=logOpenIds.has(pt.id),lc=(pt.log||[]).length;
         const partEditBtns=canEdit()?`<td>${ddPart(p.id,pt.id)}</td>`:'<td></td>';
-        html+=`<tr id="ppart-${pt.id}" data-partid="${pt.id}" class="${pt.status==='nowo'?'nwrow':''}">
-          <td><span class="wo">${pt.wo||'—'}</span></td>
+        const selKey=p.id+'|'+pt.id;
+        const isSel=selectedParts.has(selKey);
+        html+=`<tr id="ppart-${pt.id}" data-partid="${pt.id}" class="${pt.status==='nowo'?'nwrow':''}" style="${isSel?'background:rgba(240,160,32,.08);outline:1px solid var(--amber-dim)':''}">
+          <td style="padding-left:8px"><input type="checkbox" ${isSel?'checked':''} onchange="togglePartSelect('${pt.id}','${p.id}')" onclick="event.stopPropagation()" style="accent-color:var(--amber);cursor:pointer"></td>
+          <td style="white-space:nowrap"><span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit" style="cursor:pointer;border-bottom:1px dashed var(--border2)">${pt.wo||'—'}</span>${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:1px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:5px">OUT</span>':''}</td>
           <td><span class="cbadge ${cbadge(p.client)}" style="opacity:.4;font-size:9px">${p.client}</span></td>
           <td style="color:var(--muted);font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.projectName}</td>
           <td style="font-size:12px">${pt.desc}</td>
@@ -1178,11 +1532,12 @@ function renderProg(){
           <td><button class="lbtn" onclick="toggleLog('${pt.id}')">${showLog?'Hide':'Log'}${lc?` (${lc})`:''}</button></td>
           ${partEditBtns}
         </tr>`;
-        if(showLog)html+=`<tr><td colspan="10" style="padding:0 10px 10px">${logHTML(pt)}</td></tr>`;
+        if(showLog)html+=`<tr><td colspan="11" style="padding:0 10px 10px">${logHTML(pt)}</td></tr>`;
       });
     }
   });
   tbody.innerHTML=html;
+  updateSelectionUI();
 }
 function toggleLoad(lid){if(collapsedLoads.has(lid))collapsedLoads.delete(lid);else collapsedLoads.add(lid);renderProg();}
 function toggleSection(s){if(collapsedSections.has(s))collapsedSections.delete(s);else collapsedSections.add(s);renderMyWork();}
@@ -1207,7 +1562,7 @@ function renderSchedule(){
         const ptDue=pt.dueDate&&pt.dueStr&&pt.dueStr!==p.dueStr?pt.dueStr:null;
         const[ptDlTxt,ptDcc]=ptDue?dueChip(dl(pt.dueDate),ptDue):['',''];
         return`<div id="spart-${pt.id}" data-partid="${pt.id}" style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px">
-          <span class="wo" style="min-width:85px;flex-shrink:0">${pt.wo||'—'}</span>
+          <span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit W/O number" style="cursor:pointer;border-bottom:1px dashed var(--border2);min-width:85px;flex-shrink:0">${pt.wo||'—'}</span>
           <span style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pt.desc}</span>
           ${ptDue?`<span class="due-chip ${ptDcc}" style="font-size:10px;flex-shrink:0">${ptDlTxt} <span style="font-size:9px;color:var(--muted)">own date</span></span>`:''}
           <div style="flex-shrink:0">${sbadge(pt.status)}</div>
@@ -1250,8 +1605,8 @@ function renderMyWork(){
     if(pt.status==='nowo')myNowo.push(obj);
     else mine.push(obj); // outside+assigned lands here, effectiveStatus handles its section/actions
   });});
-  const active=mine.filter(pt=>effectiveStatus(pt)!=='done');
-  const done=mine.filter(pt=>effectiveStatus(pt)==='done');
+  const active=mine.filter(pt=>pt.status!=='done');
+  const done=mine.filter(pt=>pt.status==='done');
   const overdue=active.filter(pt=>{const d=dl(pt.dueDate);return d!==null&&d<0;});
   const thisWeek=active.filter(pt=>{const d=dl(pt.dueDate);return d!==null&&d>=0&&d<=7;});
   const later=active.filter(pt=>{const d=dl(pt.dueDate);return d===null||d>7;});
@@ -1265,14 +1620,26 @@ function renderMyWork(){
     const isReopen=reopenOpenId===partId,isLog=logOpenIds.has(partId);
     const cardCls=pt.status==='done'?'dn':pt.status==='paused'?'pa':pt.status==='inprogress'?'ip':d!==null&&d<0?'ov':d!==null&&d<=7?'wk':'';
     let acts='';
-    if(effectiveStatus(pt)==='drawing')acts=`<button class="abtn a-start" onclick="startPt('${pid}','${partId}')">▶ Start</button>`;
-    else if(pt.status==='inprogress')acts=`<button class="abtn a-pause" onclick="openPause('${pid}','${partId}')">⏸ Pause</button><button class="abtn a-done" onclick="donePt('${pid}','${partId}')">✓ Done</button><span class="mw-timer" id="timer-${partId}">${fmtDur(total)}</span>`;
-    else if(pt.status==='paused')acts=`<button class="abtn a-resume" onclick="resumePt('${pid}','${partId}')">▶ Resume</button><span style="font-size:11px;color:var(--muted)">${(pt.log||[]).slice().reverse().find(e=>e.action==='paused')?.reason||''}</span>`;
-    else if(pt.status==='done')acts=`<button class="abtn a-reopen" onclick="openReopen('${pid}','${partId}')">↩ Reopen</button>`;
+    if(pt.status==='drawing'){
+      if(pt.isOutside){
+        acts=`<button class="btn-p" onclick="startPt('${pid}','${partId}')">▶ Start</button><button class="btn-g" onclick="dismissOutside('${pid}','${partId}')">✓ Nothing to do</button>`;
+      }else{
+        acts=`<button class="btn-p" onclick="startPt('${pid}','${partId}')">▶ Start</button>`;
+      }
+    }
+    else if(pt.status==='inprogress'){
+      acts=`<div style="display:flex;align-items:center;gap:8px;flex:1"><button class="btn-s amb" onclick="openPause('${pid}','${partId}')">⏸ Pause</button><button class="btn-p grn" onclick="donePt('${pid}','${partId}')">✓ Done</button><span style="font-family:var(--mono);font-size:18px;color:var(--amber);margin-left:auto;letter-spacing:.5px" id="timer-${partId}">${fmtDur(total)}</span></div>`;
+    }
+    else if(pt.status==='paused'){
+      const pauseReason=(pt.log||[]).slice().reverse().find(e=>e.action==='paused')?.reason||'';
+      acts=`<div style="display:flex;align-items:center;gap:8px;flex:1"><button class="btn-p" onclick="resumePt('${pid}','${partId}')">▶ Resume</button><span style="font-size:11px;color:var(--muted);font-style:italic">${pauseReason}</span></div>`;
+    }
+    else if(pt.status==='done'){
+      acts=`<button class="btn-g" onclick="openReopen('${pid}','${partId}')">↩ Reopen</button>`;
+    }
     return`<div class="mwcard ${cardCls}">
-      <div class="mwcard-top">
         <div>
-          <div class="mw-proj"><span class="cbadge ${cbadge(pt.client)}" style="margin-right:4px">${pt.client}</span>${pt.projectName}</div>
+          <div class="mw-proj"><span class="cbadge ${cbadge(pt.client)}" style="margin-right:4px">${pt.client}</span>${pt.projectName}${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:2px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:6px;letter-spacing:1px">OUT</span>':''}</div>
           <div class="mw-part">${pt.desc}</div>
           <div class="mw-wo">${pt.wo||'No W/O'} ${meta?`· <span style="color:var(--muted)">${meta}</span>`:''}</div>
           ${pt.notes?`<div class="mw-notes">${pt.notes}</div>`:''}
@@ -1281,7 +1648,7 @@ function renderMyWork(){
           ${sbadge(pt.status)}<span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span>
         </div>
       </div>
-      ${acts?`<div class="mw-acts">${acts}<button class="abtn a-log" onclick="toggleLog('${partId}')">${isLog?'Hide log':'Log'}</button></div>`:''}
+      ${acts?`<div class="mw-acts" style="display:flex;align-items:center;gap:8px;margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">${acts}<button class="btn-g" style="margin-left:auto;font-size:10px" onclick="toggleLog('${partId}')">${isLog?'Hide log':'Log'}</button></div>`:''}
       ${isReopen?reopenPickerHTML(partId,pid,partId):''}
       ${isLog?`<div style="margin-top:8px">${logHTML(pt)}</div>`:''}
     </div>`;
@@ -1317,6 +1684,9 @@ function renderMyWork(){
   startActTimer();
 }
 let analyticsPeriod='all';
+let progFilterUser='all';
+let progFilterStatus='all';
+let selectedParts=new Set();
 function setAnalyticsPeriod(p,btn){
   analyticsPeriod=p;
   document.querySelectorAll('[id^="ap-"]').forEach(b=>b.classList.remove('active'));
@@ -1332,7 +1702,7 @@ function renderAnalytics(){
   all.forEach(pt=>{
     if(!pt.assignedTo)return;
     if(!byPerson[pt.assignedTo])byPerson[pt.assignedTo]={done:0,active:0,drawing:0,normalTime:0,revisionTime:0,pauses:0,revisions:0,doneTimes:[]};
-    if(effectiveDone(pt))byPerson[pt.assignedTo].done++;
+    if(pt.status==='done')byPerson[pt.assignedTo].done++;
     else if(['inprogress','paused'].includes(pt.status))byPerson[pt.assignedTo].active++;
     else byPerson[pt.assignedTo].drawing++;
     if(pt.log){
@@ -1352,11 +1722,10 @@ function renderAnalytics(){
   all.forEach(pt=>{(pt.log||[]).filter(e=>e.action==='paused'&&e.reason&&e.ts>=cutoff).forEach(e=>{pauseR[e.reason]=(pauseR[e.reason]||0)+1;});});
   const totalP=Object.values(pauseR).reduce((a,b)=>a+b,0);
 
-  const statusCounts={done:0,inprogress:0,paused:0,drawing:0,nowo:0,outside_free:0};
+  const statusCounts={done:0,inprogress:0,paused:0,drawing:0,nowo:0,outside:0};
   all.forEach(pt=>{
-    if(pt.status==='outside'&&!pt.assignedTo)statusCounts.outside_free++;
-    else if(pt.status==='outside'&&pt.assignedTo)statusCounts.drawing++;
-    else statusCounts[pt.status]=(statusCounts[pt.status]||0)+1;
+    statusCounts[pt.status]=(statusCounts[pt.status]||0)+1;
+    if(pt.isOutside)statusCounts.outside_free++;
   });
   const totalParts=all.length;
   const statusDefs=[
@@ -1365,7 +1734,7 @@ function renderAnalytics(){
     {key:'inprogress',label:'In Progress',color:'var(--amber)'},
     {key:'paused',label:'Paused',color:'#b07820'},
     {key:'nowo',label:'No W/O',color:'var(--red)'},
-    {key:'outside_free',label:'Outside (unassigned)',color:'var(--purple)'},
+    {key:'outside',label:'Outside (flag)',color:'var(--purple)'},
   ];
 
   function buildDonut(){
@@ -1447,7 +1816,7 @@ function renderAnalytics(){
   const wk=`${yr}-W${String(wn).padStart(2,'0')}`,thisCap=cap[wk]||{};
   const progrs=users.filter(u=>['programmer','manager'].includes(u.role));
   const asgWk={};
-  projects.forEach(p=>{const due=p.dueDate?new Date(p.dueDate):null;if(!due)return;due.setHours(0,0,0,0);if(due<now||due>we)return;p.parts.forEach(pt=>{if(pt.assignedTo&&!effectiveDone(pt)){asgWk[pt.assignedTo]=(asgWk[pt.assignedTo]||0)+1;}});});
+  projects.forEach(p=>{const due=p.dueDate?new Date(p.dueDate):null;if(!due)return;due.setHours(0,0,0,0);if(due<now||due>we)return;p.parts.forEach(pt=>{if(pt.assignedTo&&pt.status!=='done'){asgWk[pt.assignedTo]=(asgWk[pt.assignedTo]||0)+1;}});});
   const capHTML=progrs.map(u=>{const c=thisCap[u.name]||0,a=asgWk[u.name]||0,pct=c?Math.min(Math.round(a/c*100),100):0,bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--green)';return`<div class="capperson"><div style="font-size:12px;font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:7px"><span class="pchip ${u.color}">${u.name}</span></div><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px"><span style="font-size:10px;color:var(--muted)">Capacity:</span><input class="capinp" type="number" min="0" value="${c}" placeholder="0" onchange="saveCap('${wk}','${u.name}',this.value)"> parts/week</div>${c?`<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${a} assigned (${pct}%)</div><div class="btrack"><div class="bfill" style="width:${pct}%;background:${bc}"></div></div>`:`<div style="font-size:11px;color:var(--muted2)">Set capacity above</div>`}</div>`;}).join('');
   const personHTML=Object.entries(byPerson).map(([name,s])=>{
     const total=s.normalTime+s.revisionTime;const revPct=total?Math.round(s.revisionTime/total*100):0;
@@ -1464,10 +1833,98 @@ function renderAnalytics(){
   const pauseHTML=Object.entries(pauseR).sort((a,b)=>b[1]-a[1]).map(([r,n])=>`<div class="brow"><span class="blabel">${r}</span><div class="btrack"><div class="bfill" style="width:${totalP?Math.round(n/totalP*100):0}%"></div></div><span class="bval">${n}</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No pauses recorded yet</div>`;
   const dateHTML=projects.filter(p=>p.dateHistory?.length).sort((a,b)=>b.dateHistory.length-a.dateHistory.length).slice(0,6).map(p=>`<div class="drow"><strong>${p.client}</strong> · ${p.projectName}<span style="float:right;color:var(--amber)">${p.dateHistory.length}×</span></div>`).join('')||`<div style="color:var(--muted);font-size:12px">No date changes yet</div>`;
 
+  function buildMonthlyOutput(){
+    // Parts done per month (last 6 months) using completedAt or done log entry
+    const months=[];
+    const now=new Date();
+    for(let m=5;m>=0;m--){
+      const d=new Date(now.getFullYear(),now.getMonth()-m,1);
+      const label=d.toLocaleDateString('en-CA',{month:'short',year:'2-digit'});
+      const start=d.getTime();
+      const end=new Date(d.getFullYear(),d.getMonth()+1,1).getTime();
+      let count=0;
+      all.forEach(pt=>{
+        // Use completedAt first, then done log entry
+        const ts=pt.completedAt||(pt.log||[]).find(e=>e.action==='done')?.ts;
+        if(ts&&ts>=start&&ts<end)count++;
+      });
+      months.push({label,count});
+    }
+    const maxM=Math.max(...months.map(m=>m.count),1);
+    const bars=months.map(m=>{
+      const h=Math.round((m.count/maxM)*80);
+      return`<div style="display:flex;flex-direction:column;align-items:center;gap:5px;flex:1">
+        <span style="font-size:10px;font-family:var(--mono);color:var(--green);min-height:14px">${m.count||''}</span>
+        <div style="width:100%;background:var(--surface2);border-radius:3px 3px 0 0;height:80px;display:flex;align-items:flex-end">
+          <div style="width:100%;background:var(--green);border-radius:3px 3px 0 0;height:${h}px;min-height:${m.count?2:0}px"></div>
+        </div>
+        <span style="font-size:9px;color:var(--muted);text-align:center">${m.label}</span>
+      </div>`;
+    }).join('');
+    const total=months.reduce((s,m)=>s+m.count,0);
+    const avg=(total/6).toFixed(1);
+    return`<div>
+      <div style="font-family:var(--cond);font-size:28px;font-weight:700;color:var(--green);margin-bottom:2px">${total}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:14px">parts in 6 months · avg <strong style="color:var(--text)">${avg}/month</strong></div>
+      <div style="display:flex;align-items:flex-end;gap:6px">${bars}</div>
+    </div>`;
+  }
+
+  function buildLeadTime(){
+    // Days between completion and load due date (positive = on time, negative = late)
+    const dataPoints=[];
+    projects.forEach(p=>{
+      if(!p.dueDate)return;
+      p.parts.forEach(pt=>{
+        const completedTs=pt.completedAt||(pt.log||[]).find(e=>e.action==='done')?.ts;
+        if(!completedTs)return;
+        const dueTs=new Date(p.dueDate).getTime();
+        const daysDiff=Math.round((dueTs-completedTs)/86400000); // positive = completed before due
+        dataPoints.push({daysDiff,name:pt.desc,client:p.client,load:p.projectName});
+      });
+    });
+    if(!dataPoints.length)return`<div style="color:var(--muted);font-size:12px">No completion data yet — add dates to your CSV</div>`;
+    const avg=dataPoints.reduce((s,d)=>s+d.daysDiff,0)/dataPoints.length;
+    const onTime=dataPoints.filter(d=>d.daysDiff>=0).length;
+    const late=dataPoints.filter(d=>d.daysDiff<0).length;
+    const rate=Math.round(onTime/dataPoints.length*100);
+    const avgColor=avg>=0?'var(--green)':avg>=-3?'var(--amber)':'var(--red)';
+    // Distribution buckets
+    const buckets=[
+      {label:'>7d early',min:7,max:999,color:'var(--green)'},
+      {label:'1-7d early',min:1,max:7,color:'var(--blue)'},
+      {label:'On time',min:0,max:1,color:'var(--amber)'},
+      {label:'1-3d late',min:-3,max:0,color:'#b07820'},
+      {label:'>3d late',min:-999,max:-3,color:'var(--red)'},
+    ];
+    const maxBucket=Math.max(...buckets.map(b=>dataPoints.filter(d=>d.daysDiff>=b.min&&d.daysDiff<b.max).length),1);
+    const dist=buckets.map(b=>{
+      const n=dataPoints.filter(d=>d.daysDiff>=b.min&&d.daysDiff<b.max).length;
+      const w=n?Math.round(n/maxBucket*100):0;
+      return`<div class="brow"><span class="blabel" style="color:${b.color}">${b.label}</span><div class="btrack"><div class="bfill" style="width:${w}%;background:${b.color}"></div></div><span class="bval">${n}</span></div>`;
+    }).join('');
+    return`<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:14px">
+      <div style="text-align:center">
+        <div style="font-family:var(--cond);font-size:36px;font-weight:700;color:${avgColor};line-height:1">${avg>=0?'+':''}${avg.toFixed(1)}d</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:4px">avg days early</div>
+      </div>
+      <div style="flex:1;min-width:120px">
+        <div class="drow"><span style="color:var(--green)">✓ On time or early:</span><span style="float:right;font-family:var(--mono)">${onTime} (${rate}%)</span></div>
+        <div class="drow"><span style="color:var(--red)">✗ Late:</span><span style="float:right;font-family:var(--mono)">${late}</span></div>
+        <div class="drow"><span style="color:var(--muted)">Total parts tracked:</span><span style="float:right;font-family:var(--mono)">${dataPoints.length}</span></div>
+      </div>
+    </div>
+    ${dist}`;
+  }
+
   document.getElementById('analytics-body').innerHTML=`
     <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-bottom:14px">
       <div class="acard"><div class="acard-title">Parts by Status</div>${buildDonut()}</div>
       <div class="acard"><div class="acard-title">Weekly Output — Parts Completed</div>${buildWeeklyTrend()}</div>
+    </div>
+    <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(320px,1fr));margin-bottom:14px">
+      <div class="acard"><div class="acard-title">Monthly Output — Last 6 Months</div>${buildMonthlyOutput()}</div>
+      <div class="acard"><div class="acard-title">Lead Time — Avg Days Before Due Date</div>${buildLeadTime()}</div>
     </div>
     <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:14px">
       <div class="acard"><div class="acard-title">On-Time Delivery Rate</div>${buildOnTime()}</div>
@@ -1669,7 +2126,7 @@ function confirmEditWO(){
   save();closeMod('editwo');render();renderSchedule();renderSummary();toast('W/O updated ✓');
 }
 // ── ACTIVITY TRACKING ─────────────────────────────────────────────────────────
-const ACT_TYPES=['Setup de máquina','Reunião / Meeting','Treinamento','Problema técnico / Downtime','Tarefa administrativa','Outro'];
+const ACT_TYPES=['Meeting','Training','Technical issue / Downtime','Administrative task','Other'];
 
 function saveActivities(acts){localStorage.setItem('ve_activities',JSON.stringify(acts));}
 function loadActivities(){try{return JSON.parse(localStorage.getItem('ve_activities')||'[]');}catch{return[];}}
@@ -2061,18 +2518,56 @@ function bulkAssign(pid,name){
   const p=projects.find(x=>x.id===pid);if(!p)return;
   const now=Date.now();
   p.parts.forEach(pt=>{
-    if(!effectiveDone(pt)){
+    if(pt.status!=='done'){
       pt.assignedTo=name;pt.assignedAt=now;
     }
   });
   save();renderProg();setupNav();toast(`All parts in "${p.projectName}" assigned to ${name}`);
 }
 function ddPart(pid,partId){
+  const pt=projects.find(x=>x.id===pid)?.parts.find(x=>x.id===partId);
+  const isOut=pt?.isOutside;
   return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-p-${partId}',event)">⋯</button><div class="ddmenu" id="dd-p-${partId}">
     <button class="dditem blue" onclick="openEditPart('${pid}','${partId}','programming');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
+    <button class="dditem ${isOut?'amber':'blue'}" onclick="toggleOutside('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isOut?'✕ Remove Outside flag':'🔀 Mark as Outside'}</button>
     <div class="dd-divider"></div>
     <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
   </div></div>`;
+}
+function startWOEdit(pid,partId,span){
+  const p=projects.find(x=>x.id===pid),pt=p?.parts.find(x=>x.id===partId);if(!pt)return;
+  const cur=pt.wo||'';
+  const inp=document.createElement('input');
+  inp.value=cur;
+  inp.style.cssText=`font-family:var(--mono);font-size:11px;color:var(--text);background:var(--surface2);border:1px solid var(--amber);border-radius:3px;padding:1px 5px;width:100px;outline:none;`;
+  span.replaceWith(inp);
+  inp.focus();inp.select();
+  function save(){
+    const val=inp.value.trim().toUpperCase()||cur;
+    pt.wo=val;
+    // Replace input back with span
+    const newSpan=document.createElement('span');
+    newSpan.className='wo';
+    newSpan.style.cssText='cursor:pointer;border-bottom:1px dashed var(--border2)';
+    newSpan.title='Click to edit W/O number';
+    newSpan.textContent=val||'—';
+    newSpan.onclick=()=>startWOEdit(pid,partId,newSpan);
+    inp.replaceWith(newSpan);
+    saveData();
+    if(val!==cur)toast(`W/O updated: ${val}`);
+  }
+  inp.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){e.preventDefault();save();}
+    if(e.key==='Escape'){inp.value=cur;save();}
+  });
+  inp.addEventListener('blur',save);
+}
+function saveData(){save();renderSummary();}
+function toggleOutside(pid,partId){
+  const p=projects.find(x=>x.id===pid),pt=p?.parts.find(x=>x.id===partId);if(!pt)return;
+  pt.isOutside=!pt.isOutside;
+  save();render();renderSchedule();renderSummary();
+  toast(pt.isOutside?'Marked as Outside 🔀':'Outside flag removed');
 }
 function ddSchedLoad(pid){
   const p=projects.find(x=>x.id===pid);
@@ -2098,7 +2593,7 @@ function openDeliverLoad(pid){
   const p=projects.find(x=>x.id===pid);if(!p)return;
   document.getElementById('deliver-pid').value=pid;
   document.getElementById('deliver-sub').textContent=`${p.client} · ${p.projectName}`;
-  const pending=p.parts.filter(pt=>!effectiveDone(pt));
+  const pending=p.parts.filter(pt=>pt.status!=='done');
   const pendSec=document.getElementById('deliver-pending-section');
   const goodSec=document.getElementById('deliver-allgood');
   if(pending.length){
@@ -2119,12 +2614,12 @@ function openDeliverLoad(pid){
 function confirmDeliver(){
   const pid=document.getElementById('deliver-pid').value;
   const p=projects.find(x=>x.id===pid);if(!p)return;
-  const pending=p.parts.filter(pt=>!effectiveDone(pt));
+  const pending=p.parts.filter(pt=>pt.status!=='done');
   if(pending.length){
     const choice=document.querySelector('input[name="dp-choice"]:checked')?.value;
     if(!choice){toast('Please choose what to do with pending W/Os');return;}
     if(choice==='done')pending.forEach(pt=>pt.status='done');
-    else if(choice==='outside')pending.forEach(pt=>pt.status='outside');
+    else if(choice==='outside')pending.forEach(pt=>{pt.isOutside=true;});
     // 'keep' → do nothing
   }
   p.delivered=true;
@@ -2154,9 +2649,13 @@ function confirmReopenLoad(){
   toast(`"${p.projectName}" reopened`);
 }
 function ddSchedPart(pid,partId){
+  const p=projects.find(x=>x.id===pid),pt=p?.parts.find(x=>x.id===partId);
+  const isOut=pt?.isOutside;
   return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-sp-${partId}',event)">⋯</button><div class="ddmenu" id="dd-sp-${partId}">
     <button class="dditem blue" onclick="openEditWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
     <button class="dditem amber" onclick="openMoveWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">⇄ Move to load</button>
+    <div class="dd-divider"></div>
+    <button class="dditem ${isOut?'amber':'blue'}" onclick="toggleOutside('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isOut?'✕ Remove Outside flag':'🔀 Mark as Outside'}</button>
     <div class="dd-divider"></div>
     <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
   </div></div>`;
