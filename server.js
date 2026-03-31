@@ -24,10 +24,8 @@ function writeJSON(file, data) {
 // ── INIT DEFAULTS ─────────────────────────────────────────────────────────────
 if (!fs.existsSync(USERS_FILE)) {
   writeJSON(USERS_FILE, [
-    { id: '1', name: 'Juliana', passwordHash: bcrypt.hashSync('ve2026', 8), color: 'prog-0', role: 'manager' },
-    { id: '2', name: 'Programmer 2', passwordHash: bcrypt.hashSync('ve2026', 8), color: 'prog-1', role: 'programmer' },
-    { id: '3', name: 'Viewer', passwordHash: bcrypt.hashSync('ve2026', 8), color: 'prog-2', role: 'viewer' },
-    { id: '4', name: 'Project Manager', passwordHash: bcrypt.hashSync('ve2026', 8), color: 'prog-3', role: 'projectmanager' }
+    { id: '1', name: 'Juliana', passwordHash: bcrypt.hashSync('ve2026', 8), color: 'p0', role: 'manager',
+      tabs: ['dashboard','schedule','programming','mywork','analytics'], mustChange: false }
   ]);
 }
 if (!fs.existsSync(PROJECTS_FILE)) writeJSON(PROJECTS_FILE, []);

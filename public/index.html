@@ -74,8 +74,12 @@ nav button:hover:not(.active){background:var(--surface3);color:var(--text2);}
 .udot{width:6px;height:6px;border-radius:50%;background:var(--green);}
 main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .stats-row{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-bottom:14px;}
-.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden;}
-.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border2);}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r8);padding:12px 14px;position:relative;overflow:hidden;transition:border-color .15s,background .15s;}
+.stat::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--border2);transition:background .15s;}
+.stat[style*="cursor:pointer"]:hover{border-color:var(--amber-dim);background:var(--surface2);}
+.stat[style*="cursor:pointer"]:hover::before{background:var(--amber);}
+.stat.active-filter{border-color:var(--amber);background:var(--amber-bg);}
+.stat.active-filter::before{background:var(--amber);}
 .stat-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:6px;font-family:var(--cond);font-weight:600;}
 .stat-value{font-family:var(--cond);font-size:22px;font-weight:600;line-height:1;letter-spacing:-1px;}
 .stat-sub{font-size:10px;color:var(--muted);margin-top:3px;}
@@ -286,6 +290,8 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .toast{position:fixed;bottom:20px;right:20px;background:var(--surface2);border:1px solid var(--border2);border-top:2px solid var(--green);border-radius:var(--r8);padding:9px 14px;font-size:12px;font-family:var(--cond);font-weight:500;transform:translateY(60px);opacity:0;transition:all .25s;z-index:999;}
 .toast.show{transform:translateY(0);opacity:1;}
 .nowo-fyi{opacity:.55;}
+.rush-badge{display:inline-flex;align-items:center;gap:3px;font-size:9px;font-family:var(--cond);font-weight:700;padding:2px 6px;border-radius:3px;background:#1a0000;border:1px solid var(--red-dim);color:var(--red);letter-spacing:1px;animation:rushPulse 2s infinite;}
+@keyframes rushPulse{0%,100%{border-color:var(--red-dim);}50%{border-color:var(--red);box-shadow:0 0 6px rgba(224,64,64,.3);}}
 @keyframes slideDown{from{transform:translateX(-50%) translateY(-12px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
 /* DROPDOWN MENU */
 .ddwrap{position:relative;display:inline-block;}
@@ -357,13 +363,30 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
     <div id="view-dashboard" style="display:none">
       <div class="summary-banner" id="summary-banner"></div>
       <div class="stats-row">
-        <div class="stat"><div class="stat-label">Total Loads</div><div class="stat-value" id="s-total">0</div></div>
-        <div class="stat"><div class="stat-label">No W/O</div><div class="stat-value cr" id="s-nowo">0</div><div class="stat-sub">Waiting</div></div>
-        <div class="stat"><div class="stat-label">To Program</div><div class="stat-value cb" id="s-drawing">0</div><div class="stat-sub">Drawing OK</div></div>
-        <div class="stat"><div class="stat-label">In Progress</div><div class="stat-value ca" id="s-prog">0</div></div>
-        <div class="stat"><div class="stat-label">Outside</div><div class="stat-value cp" id="s-out">0</div></div>
-        <div class="stat"><div class="stat-label">Done</div><div class="stat-value cg" id="s-done">0</div></div>
-        <div class="stat"><div class="stat-label">Delivered</div><div class="stat-value cg" id="s-delivered">0</div><div class="stat-sub">Closed loads</div></div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('all')" title="Show all loads">
+        <div class="stat-label">Total Loads</div><div class="stat-value" id="s-total">0</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('nowo')" title="Show loads with No W/O">
+        <div class="stat-label">No W/O</div><div class="stat-value cr" id="s-nowo">0</div><div class="stat-sub">Waiting</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('drawing')" title="Show loads ready to program">
+        <div class="stat-label">To Program</div><div class="stat-value cb" id="s-drawing">0</div><div class="stat-sub">Drawing OK</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('inprogress')" title="Show loads in progress">
+        <div class="stat-label">In Progress</div><div class="stat-value ca" id="s-prog">0</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('outside')" title="Show loads with outside parts">
+        <div class="stat-label">Outside</div><div class="stat-value cp" id="s-out">0</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('done')" title="Show completed loads">
+        <div class="stat-label">Done</div><div class="stat-value cg" id="s-done">0</div>
+      </div>
+      <div class="stat" style="cursor:pointer" onclick="setFilterFromStat('delivered')" title="Show delivered loads">
+        <div class="stat-label">Delivered</div><div class="stat-value cg" id="s-delivered">0</div><div class="stat-sub">Closed loads</div>
+      </div>
+      <div class="stat" style="cursor:pointer;border-left:2px solid var(--red-dim)" onclick="setFilterFromStat('rush')" title="Show loads with Rush WOs">
+        <div class="stat-label" style="color:var(--red)">⚡ Rush</div><div class="stat-value cr" id="s-rush">0</div><div class="stat-sub">Active</div>
+      </div>
       </div>
       <div class="filter-bar">
         <span class="filter-label">Show:</span>
@@ -414,7 +437,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
       </div>
       <div class="prog-wrap">
         <table class="prog-table">
-          <thead><tr><th></th><th>W/O</th><th>Client</th><th>Load</th><th>Part Description</th><th>Due</th><th>Status</th><th>Assigned To</th><th>Notes</th><th>Log</th></tr></thead>
+          <thead><tr><th></th><th>W/O</th><th>Client</th><th>Load</th><th>Part Description</th><th>Due</th><th>Status</th><th>Assigned To</th><th>Notes</th><th>Log</th><th></th></tr></thead>
           <tbody id="prog-tbody"></tbody>
         </table>
       </div>
@@ -489,6 +512,11 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
     <label class="fl">Client</label><input class="fi" id="load-client" placeholder="e.g. LULU, UGGS..." oninput="this.value=this.value.toUpperCase()">
     <label class="fl">Load Name</label><input class="fi" id="load-name" placeholder="e.g. LULULEMON - RUSH ST LOAD 1" oninput="this.value=this.value.toUpperCase()">
     <label class="fl">Due Date</label><input class="fi" id="load-due" type="date" style="color-scheme:dark light">
+    <div id="load-reason-section" style="display:none">
+      <label class="fl" style="color:var(--amber)">Reason for date change <span style="color:var(--red)">*</span></label>
+      <div class="ropts" id="load-reason-ropts" style="margin-bottom:8px"></div>
+      <input class="fi" id="load-reason-other" placeholder="Describe..." style="display:none;margin-bottom:4px">
+    </div>
     <div class="modal-actions"><button class="btn-ok" onclick="saveLoad()">Save</button><button class="btn-cancel" onclick="closeMod('load')">Cancel</button></div>
   </div>
 </div>
@@ -688,7 +716,9 @@ function loadData(){
   projects.forEach(p=>p.parts.forEach(pt=>{
     if(pt.status==='outside'){
       pt.isOutside=true;
-      pt.status=pt.assignedTo?'drawing':'done';
+      // Keep as drawing so they show up properly — done status should only
+      // be set when actually completed, not just because they're outside
+      pt.status=pt.assignedTo?'drawing':'drawing';
       migrated=true;
     }
   }));
@@ -829,6 +859,70 @@ function showBalanceWarning(heavy,heavyN,light,lightN){
   badge.title='Click to filter Programming by '+heavy;
 }
 
+function showWeeklySummary(){
+  if(!currentUser||!['manager','projectmanager'].includes(currentUser.role))return;
+  const now=new Date();now.setHours(0,0,0,0);
+  const wkStart=new Date(now);wkStart.setDate(wkStart.getDate()-7); // last week
+  const wkEnd=new Date(now);
+  const all=projects.flatMap(p=>p.parts.map(pt=>({...pt,client:p.client,projectName:p.projectName,dueDate:p.dueDate})));
+
+  const doneThisWeek=all.filter(pt=>(pt.log||[]).some(e=>e.action==='done'&&e.ts>=wkStart.getTime()&&e.ts<wkEnd.getTime()));
+  const rushWOs=all.filter(pt=>pt.isRush&&(pt.log||[]).some(e=>e.ts>=wkStart.getTime()));
+  const revisionsWk=all.filter(pt=>(pt.log||[]).some(e=>e.action==='reopened'&&e.ts>=wkStart.getTime()));
+  const dateChangesWk=projects.flatMap(p=>(p.dateHistory||[]).filter(h=>h.changedAt>=wkStart.getTime()&&h.changedAt<wkEnd.getTime()).map(h=>({...h,projectName:p.projectName,client:p.client})));
+  const byPerson={};
+  doneThisWeek.forEach(pt=>{if(pt.assignedTo)byPerson[pt.assignedTo]=(byPerson[pt.assignedTo]||0)+1;});
+
+  const reasonCounts={};
+  dateChangesWk.forEach(h=>{if(h.reason)reasonCounts[h.reason]=(reasonCounts[h.reason]||0)+1;});
+  const topReason=Object.entries(reasonCounts).sort((a,b)=>b[1]-a[1])[0];
+
+  const wkLabel=`${wkStart.toLocaleDateString('en-CA',{month:'short',day:'numeric'})} – ${new Date(wkEnd-1).toLocaleDateString('en-CA',{month:'short',day:'numeric'})}`;
+
+  let html=`
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+      <div style="background:var(--surface2);border-radius:var(--r8);padding:12px;text-align:center">
+        <div style="font-family:var(--cond);font-size:32px;font-weight:700;color:var(--green)">${doneThisWeek.length}</div>
+        <div style="font-size:11px;color:var(--muted)">parts completed</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--r8);padding:12px;text-align:center">
+        <div style="font-family:var(--cond);font-size:32px;font-weight:700;color:${revisionsWk.length>3?'var(--red)':'var(--amber)'}">${revisionsWk.length}</div>
+        <div style="font-size:11px;color:var(--muted)">revisions</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--r8);padding:12px;text-align:center">
+        <div style="font-family:var(--cond);font-size:32px;font-weight:700;color:var(--red)">${rushWOs.length}</div>
+        <div style="font-size:11px;color:var(--muted)">rush WOs</div>
+      </div>
+      <div style="background:var(--surface2);border-radius:var(--r8);padding:12px;text-align:center">
+        <div style="font-family:var(--cond);font-size:32px;font-weight:700;color:var(--amber)">${dateChangesWk.length}</div>
+        <div style="font-size:11px;color:var(--muted)">date changes</div>
+      </div>
+    </div>`;
+
+  if(Object.keys(byPerson).length){
+    html+=`<div style="margin-bottom:14px"><div class="sec-hdr" style="margin-bottom:8px">Output by programmer</div>`;
+    html+=Object.entries(byPerson).sort((a,b)=>b[1]-a[1]).map(([name,n])=>`
+      <div style="display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid var(--border)">
+        <span class="pchip ${users.find(u=>u.name===name)?.color||'pnone'}">${name}</span>
+        <div class="btrack" style="flex:1"><div class="bfill" style="width:${Math.round(n/Math.max(...Object.values(byPerson))*100)}%;background:var(--green)"></div></div>
+        <span style="font-size:12px;font-family:var(--mono);min-width:20px;text-align:right">${n}</span>
+      </div>`).join('');
+    html+=`</div>`;
+  }
+
+  if(topReason){
+    html+=`<div style="font-size:12px;color:var(--muted);padding:8px 12px;background:var(--amber-bg);border:1px solid var(--amber-dim);border-radius:var(--r6)">
+      Top reason for date changes: <strong style="color:var(--amber)">${topReason[0]}</strong> (${topReason[1]}×)
+    </div>`;
+  }
+
+  // Reuse duetoday modal for weekly summary
+  document.getElementById('duetoday-sub').textContent=`Week of ${wkLabel}`;
+  document.getElementById('duetoday-body').innerHTML=html;
+  document.querySelector('#mod-duetoday .modal-title').textContent='📊 Weekly Summary';
+  openMod('duetoday');
+}
+
 function showDueTodayIfNeeded(){
   if(!currentUser||currentUser.role==='guest')return;
   const now=new Date();now.setHours(0,0,0,0);
@@ -925,8 +1019,12 @@ function bootApp(){
   const perms=getPerms(currentUser);
   setView(perms.tabs[0]);
   updateAWP();
-  setTimeout(showDueTodayIfNeeded, 400);
-  setTimeout(checkWorkloadBalance, 500);
+  setTimeout(()=>{
+    showDueTodayIfNeeded();
+    // Show weekly summary on Mondays (day 1)
+    if(new Date().getDay()===1)setTimeout(showWeeklySummary,2000);
+  },400);
+  setTimeout(checkWorkloadBalance,500);
 }
 function getMyWorkBadge(){
   if(!currentUser||currentUser.role==='guest')return'';
@@ -1285,6 +1383,18 @@ function startWOEdit(pid,partId,el){
   inp.addEventListener('keydown',e=>{if(e.key==='Enter')inp.blur();if(e.key==='Escape'){inp.value=current;inp.blur();}});
 }
 function save_data(){save();} // alias to avoid naming conflict inside startWOEdit
+function toggleRush(pid,partId){
+  const p=projects.find(x=>x.id===pid);
+  const pt=p?.parts.find(x=>x.id===partId);
+  if(!pt)return;
+  pt.isRush=!pt.isRush;
+  if(pt.isRush){
+    if(!pt.log)pt.log=[];
+    pt.log.push({ts:Date.now(),action:'rush',reason:'Marked as RUSH',user:currentUser?.name||'system'});
+  }
+  save();renderProg();renderSchedule();renderDash();renderSummary();
+  toast(pt.isRush?'⚡ Marked as RUSH':'Rush flag removed');
+}
 function toggleOutside(pid,partId){
   const p=projects.find(x=>x.id===pid);
   const pt=p?.parts.find(x=>x.id===partId);
@@ -1361,12 +1471,15 @@ function filtered(){
   let list=[...projects].sort((a,b)=>{const o={overdue:0,urgent:1,soon:2,far:3};return(o[urgency(a)]??3)-(o[urgency(b)]??3)||(dl(a.dueDate)??9999)-(dl(b.dueDate)??9999);});
   // Hide delivered from default view
   if(filterMode==='delivered') list=list.filter(p=>p.delivered);
-  else list=list.filter(p=>!p.delivered); // never show delivered in other filters
+  else list=list.filter(p=>!p.delivered);
   if(filterMode==='overdue')list=list.filter(p=>urgency(p)==='overdue');
   else if(filterMode==='week')list=list.filter(p=>urgency(p)==='urgent');
-  else if(filterMode==='nowo')list=list.filter(p=>p.parts.filter(pt=>pt.status==='nowo').length>0);
-  else if(filterMode==='outside')list=list.filter(p=>p.parts.some(pt=>pt.isOutside));
-  else if(filterMode==='done')list=list.filter(p=>p.parts.every(pt=>pt.status==='done'));
+  else if(filterMode==='nowo')list=list.filter(p=>p.parts.some(pt=>pt.status==='nowo'));
+  else if(filterMode==='outside')list=list.filter(p=>p.parts.some(pt=>pt.isOutside&&pt.status!=='done'));
+  else if(filterMode==='done')list=list.filter(p=>p.parts.length>0&&p.parts.every(pt=>pt.status==='done'));
+  else if(filterMode==='inprogress')list=list.filter(p=>p.parts.some(pt=>['inprogress','paused'].includes(pt.status)));
+  else if(filterMode==='drawing')list=list.filter(p=>p.parts.some(pt=>pt.status==='drawing'));
+  else if(filterMode==='rush')list=list.filter(p=>p.parts.some(pt=>pt.isRush&&!effectiveDone(pt)));
   if(searchStr){const s=searchStr.toLowerCase();list=list.filter(p=>p.client.toLowerCase().includes(s)||p.projectName.toLowerCase().includes(s)||p.parts.some(pt=>pt.wo.toLowerCase().includes(s)||pt.desc.toLowerCase().includes(s)));}
   return list;
 }
@@ -1376,9 +1489,10 @@ function renderDash(){
   document.getElementById('s-nowo').textContent=all.filter(pt=>pt.status==='nowo').length;
   document.getElementById('s-drawing').textContent=all.filter(pt=>pt.status==='drawing').length;
   document.getElementById('s-prog').textContent=all.filter(pt=>['inprogress','paused'].includes(pt.status)).length;
-  document.getElementById('s-out').textContent=all.filter(pt=>pt.isOutside).length;
+  document.getElementById('s-out').textContent=all.filter(pt=>pt.isOutside&&pt.status!=='done').length;
   document.getElementById('s-done').textContent=all.filter(pt=>pt.status==='done').length;
   document.getElementById('s-delivered').textContent=projects.filter(p=>p.delivered).length;
+  const rushEl=document.getElementById('s-rush');if(rushEl)rushEl.textContent=all.filter(pt=>pt.isRush&&!effectiveDone(pt)).length;
   const list=filtered(),con=document.getElementById('dash-list');
   if(!list.length){con.innerHTML=`<div style="text-align:center;padding:50px 20px;color:var(--muted)"><div style="font-size:15px">${!projects.length?'No data yet':'No matches'}</div></div>`;return;}
   con.innerHTML=list.map(p=>{
@@ -1423,7 +1537,7 @@ function showDH(evt,pid){
   evt.stopPropagation();const p=projects.find(x=>x.id===pid);if(!p)return;
   document.getElementById('dh-title').textContent=`Date History — ${p.projectName}`;
   const hist=p.dateHistory||[];
-  document.getElementById('dh-body').innerHTML=hist.length?hist.map(h=>`<div class="dh-entry"><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">${fmtTs(h.changedAt)}</span><br><span style="color:var(--red)">${h.from}</span> → <span style="color:var(--green)">${h.to}</span><span style="color:var(--muted2);font-size:10px;margin-left:8px">by ${h.changedBy}</span></div>`).join(''):`<div style="color:var(--muted);font-size:12px">No changes recorded yet.</div>`;
+  document.getElementById('dh-body').innerHTML=hist.length?hist.map(h=>`<div class="dh-entry"><span style="color:var(--muted);font-size:10px;font-family:var(--mono)">${fmtTs(h.changedAt)}</span><br><span style="color:var(--red)">${h.from||'(none)'}</span> → <span style="color:var(--green)">${h.to}</span><span style="color:var(--muted2);font-size:10px;margin-left:8px">by ${h.changedBy}</span>${h.reason?`<br><span style="font-size:11px;color:var(--amber);font-style:italic">${h.reason}</span>`:''}</div>`).join(''):`<div style="color:var(--muted);font-size:12px">No changes recorded yet.</div>`;
   openMod('dh');
 }
 function setProgFilter(type,val,btn){
@@ -1522,11 +1636,12 @@ function renderProg(){
         const isSel=selectedParts.has(selKey);
         html+=`<tr id="ppart-${pt.id}" data-partid="${pt.id}" class="${pt.status==='nowo'?'nwrow':''}" style="${isSel?'background:rgba(240,160,32,.08);outline:1px solid var(--amber-dim)':''}">
           <td style="padding-left:8px"><input type="checkbox" ${isSel?'checked':''} onchange="togglePartSelect('${pt.id}','${p.id}')" onclick="event.stopPropagation()" style="accent-color:var(--amber);cursor:pointer"></td>
-          <td style="white-space:nowrap"><span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit" style="cursor:pointer;border-bottom:1px dashed var(--border2)">${pt.wo||'—'}</span>${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:1px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:5px">OUT</span>':''}</td>
+          <td style="white-space:nowrap"><span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit" style="cursor:pointer;border-bottom:1px dashed var(--border2)">${pt.wo||'—'}</span>${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:1px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:5px">OUT</span>':''}${pt.isRush?'<span class="rush-badge" style="margin-left:4px">⚡ RUSH</span>':''}</td>
           <td><span class="cbadge ${cbadge(p.client)}" style="opacity:.4;font-size:9px">${p.client}</span></td>
           <td style="color:var(--muted);font-size:10px;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${p.projectName}</td>
           <td style="font-size:12px">${pt.desc}</td>
           <td>${(()=>{const d=dl(p.dueDate);const[dlTxt,dcc]=dueChip(d,p.dueStr);return`<span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span>`;})()}</td>
+          <td><select class="msel" onchange="setStatus('${p.id}','${pt.id}',this.value)">${stOpts}</select></td>
           <td><select class="msel ${pt.assignedTo?'asgn':''}" onchange="assignPt('${p.id}','${pt.id}',this.value)">${aopts}</select></td>
           <td><input class="notes-inp" value="${(pt.notes||'').replace(/"/g,'&quot;')}" placeholder="Add note..." onchange="saveNotes('${p.id}','${pt.id}',this.value)"></td>
           <td><button class="lbtn" onclick="toggleLog('${pt.id}')">${showLog?'Hide':'Log'}${lc?` (${lc})`:''}</button></td>
@@ -1562,7 +1677,7 @@ function renderSchedule(){
         const ptDue=pt.dueDate&&pt.dueStr&&pt.dueStr!==p.dueStr?pt.dueStr:null;
         const[ptDlTxt,ptDcc]=ptDue?dueChip(dl(pt.dueDate),ptDue):['',''];
         return`<div id="spart-${pt.id}" data-partid="${pt.id}" style="display:flex;align-items:center;gap:10px;padding:7px 14px;border-bottom:1px solid var(--border);font-size:12px">
-          <span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit W/O number" style="cursor:pointer;border-bottom:1px dashed var(--border2);min-width:85px;flex-shrink:0">${pt.wo||'—'}</span>
+          <span class="wo" onclick="startWOEdit('${p.id}','${pt.id}',this)" title="Click to edit W/O number" style="cursor:pointer;border-bottom:1px dashed var(--border2);min-width:85px;flex-shrink:0">${pt.wo||'—'}</span>${pt.isRush?'<span class="rush-badge" style="margin-left:4px">⚡ RUSH</span>':''}
           <span style="flex:1;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${pt.desc}</span>
           ${ptDue?`<span class="due-chip ${ptDcc}" style="font-size:10px;flex-shrink:0">${ptDlTxt} <span style="font-size:9px;color:var(--muted)">own date</span></span>`:''}
           <div style="flex-shrink:0">${sbadge(pt.status)}</div>
@@ -1639,7 +1754,7 @@ function renderMyWork(){
     }
     return`<div class="mwcard ${cardCls}">
         <div>
-          <div class="mw-proj"><span class="cbadge ${cbadge(pt.client)}" style="margin-right:4px">${pt.client}</span>${pt.projectName}${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:2px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:6px;letter-spacing:1px">OUT</span>':''}</div>
+          <div class="mw-proj"><span class="cbadge ${cbadge(pt.client)}" style="margin-right:4px">${pt.client}</span>${pt.projectName}${pt.isOutside?'<span style="font-size:9px;font-family:var(--cond);font-weight:700;padding:2px 5px;border-radius:3px;background:var(--purple-bg);border:1px solid var(--purple-dim);color:var(--purple);margin-left:6px;letter-spacing:1px">OUT</span>':''}${pt.isRush?'<span class="rush-badge" style="margin-left:4px">⚡ RUSH</span>':''}</div>
           <div class="mw-part">${pt.desc}</div>
           <div class="mw-wo">${pt.wo||'No W/O'} ${meta?`· <span style="color:var(--muted)">${meta}</span>`:''}</div>
           ${pt.notes?`<div class="mw-notes">${pt.notes}</div>`:''}
@@ -1752,6 +1867,26 @@ function renderAnalytics(){
     return`<div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap"><svg width="180" height="180" viewBox="0 0 180 180"><circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border2)" stroke-width="${stroke}"/>${slices}<text x="${cx}" y="${cy-6}" text-anchor="middle" font-size="22" font-weight="700" font-family="var(--cond)" fill="var(--text)">${totalParts}</text><text x="${cx}" y="${cy+12}" text-anchor="middle" font-size="10" font-family="var(--cond)" fill="var(--muted)">TOTAL</text></svg><div style="flex:1;min-width:140px">${legend}</div></div>`;
   }
 
+  function buildRushImpact(){
+    const rushParts=all.filter(pt=>pt.isRush);
+    if(!rushParts.length)return`<div style="color:var(--muted);font-size:12px">No rush WOs recorded yet ✓</div>`;
+    const rushByClient={};
+    projects.forEach(p=>p.parts.filter(pt=>pt.isRush).forEach(()=>{rushByClient[p.client]=(rushByClient[p.client]||0)+1;}));
+    const topClients=Object.entries(rushByClient).sort((a,b)=>b[1]-a[1]).slice(0,5);
+    const maxC=Math.max(...topClients.map(([,n])=>n),1);
+    const active=rushParts.filter(pt=>!effectiveDone(pt)).length;
+    const done=rushParts.filter(pt=>effectiveDone(pt)).length;
+    return`<div style="display:flex;gap:16px;margin-bottom:14px">
+      <div style="text-align:center"><div style="font-family:var(--cond);font-size:36px;font-weight:700;color:var(--red);line-height:1">${rushParts.length}</div><div style="font-size:11px;color:var(--muted)">total rush WOs</div></div>
+      <div style="flex:1;min-width:100px">
+        <div class="drow"><span style="color:var(--red)">⚡ Active:</span><span style="float:right;font-family:var(--mono)">${active}</span></div>
+        <div class="drow"><span style="color:var(--green)">✓ Done:</span><span style="float:right;font-family:var(--mono)">${done}</span></div>
+      </div>
+    </div>
+    <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:8px;font-family:var(--cond)">Rush by client</div>
+    ${topClients.map(([cl,n])=>`<div class="brow"><span class="blabel">${cl}</span><div class="btrack"><div class="bfill" style="width:${Math.round(n/maxC*100)}%;background:var(--red)"></div></div><span class="bval">${n}</span></div>`).join('')}`;
+  }
+
   function buildWeeklyTrend(){
     const weeks=[];
     for(let w=5;w>=0;w--){
@@ -1817,7 +1952,31 @@ function renderAnalytics(){
   const progrs=users.filter(u=>['programmer','manager'].includes(u.role));
   const asgWk={};
   projects.forEach(p=>{const due=p.dueDate?new Date(p.dueDate):null;if(!due)return;due.setHours(0,0,0,0);if(due<now||due>we)return;p.parts.forEach(pt=>{if(pt.assignedTo&&pt.status!=='done'){asgWk[pt.assignedTo]=(asgWk[pt.assignedTo]||0)+1;}});});
-  const capHTML=progrs.map(u=>{const c=thisCap[u.name]||0,a=asgWk[u.name]||0,pct=c?Math.min(Math.round(a/c*100),100):0,bc=pct>90?'var(--red)':pct>70?'var(--amber)':'var(--green)';return`<div class="capperson"><div style="font-size:12px;font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:7px"><span class="pchip ${u.color}">${u.name}</span></div><div style="display:flex;align-items:center;gap:7px;margin-bottom:7px"><span style="font-size:10px;color:var(--muted)">Capacity:</span><input class="capinp" type="number" min="0" value="${c}" placeholder="0" onchange="saveCap('${wk}','${u.name}',this.value)"> parts/week</div>${c?`<div style="font-size:11px;color:var(--muted);margin-bottom:3px">${a} assigned (${pct}%)</div><div class="btrack"><div class="bfill" style="width:${pct}%;background:${bc}"></div></div>`:`<div style="font-size:11px;color:var(--muted2)">Set capacity above</div>`}</div>`;}).join('');
+  // Planned = parts planned for this week, Executed = parts done this week
+  const wkStart=new Date(now);wkStart.setDate(wkStart.getDate()-wkStart.getDay());wkStart.setHours(0,0,0,0);
+  const wkEnd=new Date(wkStart);wkEnd.setDate(wkEnd.getDate()+7);
+  const execWk={};
+  all.forEach(pt=>{
+    const doneEvt=(pt.log||[]).find(e=>e.action==='done'&&e.ts>=wkStart.getTime()&&e.ts<wkEnd.getTime());
+    if(doneEvt&&pt.assignedTo)execWk[pt.assignedTo]=(execWk[pt.assignedTo]||0)+1;
+  });
+  const capHTML=progrs.map(u=>{
+    const cap=thisCap[u.name]||0,planned=asgWk[u.name]||0,done=execWk[u.name]||0;
+    const planPct=cap?Math.min(Math.round(planned/cap*100),100):0;
+    const donePct=cap?Math.min(Math.round(done/cap*100),100):0;
+    const planColor=planPct>90?'var(--red)':planPct>70?'var(--amber)':'var(--blue)';
+    const doneColor=done>=planned?'var(--green)':'var(--amber)';
+    return`<div class="capperson">
+      <div style="font-size:12px;font-weight:500;margin-bottom:7px;display:flex;align-items:center;gap:7px"><span class="pchip ${u.color}">${u.name}</span></div>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:10px"><span style="font-size:10px;color:var(--muted)">Capacity:</span><input class="capinp" type="number" min="0" value="${cap}" placeholder="0" onchange="saveCap('${wk}','${u.name}',this.value)"> parts/week</div>
+      ${cap?`
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Planned this week: <strong style="color:${planColor}">${planned}/${cap}</strong></div>
+        <div class="btrack" style="margin-bottom:8px"><div class="bfill" style="width:${planPct}%;background:${planColor}"></div></div>
+        <div style="font-size:10px;color:var(--muted);margin-bottom:3px">Done this week: <strong style="color:${doneColor}">${done}</strong></div>
+        <div class="btrack"><div class="bfill" style="width:${donePct}%;background:${doneColor}"></div></div>
+      `:`<div style="font-size:11px;color:var(--muted2)">Set capacity above</div>`}
+    </div>`;
+  }).join('');
   const personHTML=Object.entries(byPerson).map(([name,s])=>{
     const total=s.normalTime+s.revisionTime;const revPct=total?Math.round(s.revisionTime/total*100):0;
     // Activity time for this person
@@ -1929,6 +2088,7 @@ function renderAnalytics(){
     <div class="ag" style="grid-template-columns:repeat(auto-fit,minmax(280px,1fr));margin-bottom:14px">
       <div class="acard"><div class="acard-title">On-Time Delivery Rate</div>${buildOnTime()}</div>
       <div class="acard"><div class="acard-title">Quality — Revision Rate</div>${buildQuality()}</div>
+      <div class="acard"><div class="acard-title">⚡ Rush WO Impact</div>${buildRushImpact()}</div>
     </div>
     <div style="margin-bottom:14px">
       <div class="acard"><div class="acard-title">Productivity — Avg Parts / Week · Month · Time per Part</div>${buildAvgTime()}</div>
@@ -1965,10 +2125,45 @@ function exportAnalytics(){
 }
 function saveCap(wk,name,val){const cap=JSON.parse(localStorage.getItem('ve_cap')||'{}');if(!cap[wk])cap[wk]={};cap[wk][name]=parseInt(val)||0;localStorage.setItem('ve_cap',JSON.stringify(cap));toast('Capacity saved');}
 
+function selLoadReason(btn){
+  document.querySelectorAll('#load-reason-ropts .rpill').forEach(b=>b.classList.remove('sel'));
+  btn.classList.add('sel');
+  const other=document.getElementById('load-reason-other');
+  if(btn.textContent==='Other'){other.style.display='';other.focus();}else other.style.display='none';
+}
+function getLoadReason(){
+  const sel=document.querySelector('#load-reason-ropts .rpill.sel');
+  if(!sel)return null;
+  if(sel.textContent==='Other'){const v=(document.getElementById('load-reason-other').value||'').trim();return v||null;}
+  return sel.textContent;
+}
 function openNewLoad(){document.getElementById('load-modal-title').textContent='New Load';document.getElementById('load-edit-id').value='';document.getElementById('load-client').value='';document.getElementById('load-name').value='';document.getElementById('load-due').value='';openMod('load');}
 function openEditLoad(pid){
   const p=projects.find(x=>x.id===pid);if(!p)return;
-  document.getElementById('load-modal-title').textContent='Edit Load';document.getElementById('load-edit-id').value=pid;document.getElementById('load-client').value=p.client;document.getElementById('load-name').value=p.projectName;document.getElementById('load-due').value=dateToInput(p.dueStr);openMod('load');
+  document.getElementById('load-modal-title').textContent='Edit Load';
+  document.getElementById('load-edit-id').value=pid;
+  document.getElementById('load-client').value=p.client;
+  document.getElementById('load-name').value=p.projectName;
+  document.getElementById('load-due').value=dateToInput(p.dueStr);
+  // Hide reason section initially — shown when date changes
+  document.getElementById('load-reason-section').style.display='none';
+  document.getElementById('load-reason-ropts').innerHTML='';
+  document.getElementById('load-reason-other').style.display='none';
+  document.getElementById('load-reason-other').value='';
+  // Watch for date change
+  const dueFld=document.getElementById('load-due');
+  const origDate=dueFld.value;
+  dueFld.oninput=()=>{
+    const sec=document.getElementById('load-reason-section');
+    if(dueFld.value!==origDate){
+      sec.style.display='';
+      if(!document.getElementById('load-reason-ropts').innerHTML){
+        const reasons=['Rush / Client request','Schedule conflict','Production delay','Missing drawings','Capacity issue','Other'];
+        document.getElementById('load-reason-ropts').innerHTML=reasons.map(r=>`<button class="rpill" onclick="selLoadReason(this)">${r}</button>`).join('');
+      }
+    }else{sec.style.display='none';}
+  };
+  openMod('load');
 }
 function saveLoad(){
   const client=(document.getElementById('load-client').value||'').trim().toUpperCase();
@@ -1980,7 +2175,15 @@ function saveLoad(){
   if(editId){
     const p=projects.find(x=>x.id===editId);if(!p)return;const oldDue=p.dueStr;
     p.client=client;p.projectName=name;
-    if(dueStr!==oldDue){if(!p.dateHistory)p.dateHistory=[];p.dateHistory.push({from:oldDue,to:dueStr,changedAt:Date.now(),changedBy:currentUser.name});p.dueStr=dueStr;p.dueDate=dueDate;}
+    if(dueStr!==oldDue){
+      const reason=getLoadReason();
+      if(!reason&&document.getElementById('load-reason-section').style.display!=='none'){
+        toast('Please select a reason for the date change');return;
+      }
+      if(!p.dateHistory)p.dateHistory=[];
+      p.dateHistory.push({from:oldDue,to:dueStr,changedAt:Date.now(),changedBy:currentUser.name,reason:reason||''});
+      p.dueStr=dueStr;p.dueDate=dueDate;
+    }
   }else{projects.unshift({id:'p'+Date.now(),client,projectName:name,dueStr,dueDate,parts:[],dateHistory:[]});}
   save();closeMod('load');render();renderSchedule();renderSummary();toast(editId?'Load updated':'Load created ✓');
 }
@@ -2401,7 +2604,20 @@ function setView(v){
   ['dashboard','schedule','programming','mywork','analytics'].forEach(id=>{const el=document.getElementById('view-'+id);if(el)el.style.display=id===v?'':'none';const btn=document.getElementById('nav-'+id);if(btn)btn.classList.toggle('active',id===v);});
   if(v==='mywork'){renderMyWork();markMyWorkSeen();}if(v==='programming')renderProg();if(v==='analytics')renderAnalytics();if(v==='schedule')renderSchedule();
 }
-function setFilter(f,btn){filterMode=f;document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));btn.classList.add('active');renderDash();}
+function setFilterFromStat(f){
+  filterMode=f;
+  document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('active-filter'));
+  if(event?.currentTarget)event.currentTarget.classList.add('active-filter');
+  renderDash();
+}
+function setFilter(f,btn){
+  filterMode=f;
+  document.querySelectorAll('.pill').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.stat').forEach(s=>s.classList.remove('active-filter'));
+  renderDash();
+}
 function doSearch(v){searchStr=v;renderDash();}
 function clearAllTimers(){Object.values(liveTimers).forEach(clearInterval);liveTimers={};}
 function render(){renderDash();const vp=document.getElementById('view-programming');if(vp?.style.display!=='none')renderProg();updateAWP();}
@@ -2527,8 +2743,10 @@ function bulkAssign(pid,name){
 function ddPart(pid,partId){
   const pt=projects.find(x=>x.id===pid)?.parts.find(x=>x.id===partId);
   const isOut=pt?.isOutside;
+  const isRush=pt?.isRush;
   return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-p-${partId}',event)">⋯</button><div class="ddmenu" id="dd-p-${partId}">
     <button class="dditem blue" onclick="openEditPart('${pid}','${partId}','programming');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
+    <button class="dditem ${isRush?'amber':'red'}" onclick="toggleRush('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isRush?'✕ Remove Rush':'⚡ Mark as RUSH'}</button>
     <button class="dditem ${isOut?'amber':'blue'}" onclick="toggleOutside('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isOut?'✕ Remove Outside flag':'🔀 Mark as Outside'}</button>
     <div class="dd-divider"></div>
     <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
@@ -2563,6 +2781,18 @@ function startWOEdit(pid,partId,span){
   inp.addEventListener('blur',save);
 }
 function saveData(){save();renderSummary();}
+function toggleRush(pid,partId){
+  const p=projects.find(x=>x.id===pid);
+  const pt=p?.parts.find(x=>x.id===partId);
+  if(!pt)return;
+  pt.isRush=!pt.isRush;
+  if(pt.isRush){
+    if(!pt.log)pt.log=[];
+    pt.log.push({ts:Date.now(),action:'rush',reason:'Marked as RUSH',user:currentUser?.name||'system'});
+  }
+  save();renderProg();renderSchedule();renderDash();renderSummary();
+  toast(pt.isRush?'⚡ Marked as RUSH':'Rush flag removed');
+}
 function toggleOutside(pid,partId){
   const p=projects.find(x=>x.id===pid),pt=p?.parts.find(x=>x.id===partId);if(!pt)return;
   pt.isOutside=!pt.isOutside;
@@ -2650,11 +2880,12 @@ function confirmReopenLoad(){
 }
 function ddSchedPart(pid,partId){
   const p=projects.find(x=>x.id===pid),pt=p?.parts.find(x=>x.id===partId);
-  const isOut=pt?.isOutside;
+  const isOut=pt?.isOutside;const isRush=pt?.isRush;
   return`<div class="ddwrap"><button class="ddbtn" onclick="toggleDD('dd-sp-${partId}',event)">⋯</button><div class="ddmenu" id="dd-sp-${partId}">
     <button class="dditem blue" onclick="openEditWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✎ Edit W/O</button>
     <button class="dditem amber" onclick="openMoveWO('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">⇄ Move to load</button>
     <div class="dd-divider"></div>
+    <button class="dditem ${isRush?'amber':'red'}" onclick="toggleRush('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isRush?'✕ Remove Rush':'⚡ Mark as RUSH'}</button>
     <button class="dditem ${isOut?'amber':'blue'}" onclick="toggleOutside('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">${isOut?'✕ Remove Outside flag':'🔀 Mark as Outside'}</button>
     <div class="dd-divider"></div>
     <button class="dditem red" onclick="deletePart('${pid}','${partId}');this.closest('.ddmenu').classList.remove('open')">✕ Delete</button>
@@ -2758,20 +2989,7 @@ let deferredInstallPrompt=null;
 
 // Register inline service worker via blob
 if('serviceWorker' in navigator){
-  const swCode=`
-    const CACHE='ve-scheduler-v1';
-    const ASSETS=['/'];
-    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
-    self.addEventListener('fetch',e=>e.respondWith(
-      caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
-        if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(e.request,clone));}
-        return res;
-      }).catch(()=>caches.match('/'))
-    ));
-  `;
-  const blob=new Blob([swCode],{type:'application/javascript'});
-  const swUrl=URL.createObjectURL(blob);
-  navigator.serviceWorker.register(swUrl).catch(()=>{});
+  navigator.serviceWorker.register('/sw.js').catch(()=>{});
 }
 
 // Capture install prompt
