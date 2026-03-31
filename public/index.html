@@ -101,6 +101,7 @@ main{padding:16px 20px;max-width:1500px;margin:0 auto;}
 .project-card.overdue{border-left:3px solid var(--red);}
 .project-card.urgent{border-left:3px solid var(--amber);}
 .project-card.on-track{border-left:3px solid var(--blue);}
+.project-card.complete{border-left:3px solid var(--green);background:rgba(78,158,48,.03);}
 .card-hdr{display:flex;align-items:center;gap:12px;padding:11px 16px;cursor:pointer;transition:background .1s;}
 .card-hdr:hover{background:var(--surface2);}
 .card-hdr.open .chevron{transform:rotate(90deg);}
@@ -1002,7 +1003,7 @@ function showDueTodayIfNeeded(){
       return`<div style="display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid var(--border)">
         <span class="cbadge ${cbadge(p.client)}">${p.client}</span>
         <div style="flex:1;font-size:12px">${p.projectName}</div>
-        <span style="font-size:11px;color:var(--muted)">${done}/${tot} done</span>
+        <span style="font-size:11px;color:${done===tot&&tot>0?'var(--green)':'var(--muted)'}">${done}/${tot} done${done===tot&&tot>0?' ✓':''}</span>
       </div>`;
     }).join('');
     html+='</div>';
@@ -1498,9 +1499,9 @@ function renderDash(){
   con.innerHTML=list.map(p=>{
     const u=urgency(p),d=dl(p.dueDate),{done,tot,pct}=prog(p);
     const r=16,circ=2*Math.PI*r,offset=circ-(pct/100)*circ;
-    const rc=u==='overdue'?'var(--red)':u==='urgent'?'var(--amber)':'var(--blue)';
+    const rc=pct===100?'var(--green)':u==='overdue'?'var(--red)':u==='urgent'?'var(--amber)':'var(--blue)';
     const[dlTxt,dcc]=dueChip(d,p.dueStr);
-    const cardCls=u==='overdue'?'overdue':u==='urgent'?'urgent':u==='soon'?'on-track':'';
+    const cardCls=pct===100?'complete':u==='overdue'?'overdue':u==='urgent'?'urgent':u==='soon'?'on-track':'';
     const n=p.parts.filter(pt=>pt.status==='nowo').length,dr=p.parts.filter(pt=>pt.status==='drawing').length;
     const asgn=[...new Set(p.parts.filter(pt=>pt.assignedTo).map(pt=>pt.assignedTo))];
     const chips=asgn.map(nm=>`<span class="pchip ${uc(nm)}">${nm}</span>`).join('');
@@ -1616,13 +1617,13 @@ function renderProg(){
     const{done,tot}=prog(p);const dhc=p.dateHistory?.length||0;
     const pct=tot?Math.round(done/tot*100):0;
     const editBtns=canEdit()?ddLoad(p.id):'';
-    html+=`<tr id="pcard-${p.id}" data-pid="${p.id}" class="grow" style="cursor:pointer" onclick="toggleLoad('${p.id}')">
+    html+=`<tr id="pcard-${p.id}" data-pid="${p.id}" class="grow" style="cursor:pointer;${pct===100?'border-left:3px solid var(--green);background:rgba(78,158,48,.03)':''}" onclick="toggleLoad('${p.id}')">
       <td><span style="color:var(--muted);font-size:10px">${chev}</span></td>
       <td></td>
       <td><span class="cbadge ${cbadge(p.client)}">${p.client}</span></td>
       <td colspan="2"><strong>${p.projectName}</strong>${dhc?` <button class="dh-btn" onclick="showDH(event,'${p.id}')" style="margin-left:6px">${dhc}x</button>`:''}<span onclick="event.stopPropagation()" style="margin-left:8px">${editBtns}</span></td>
       <td><span class="due-chip ${dcc}" style="font-size:10px">${dlTxt}</span></td>
-      <td style="font-size:10px;color:var(--muted)">${done}/${tot} (${pct}%)</td>
+      <td style="font-size:10px;color:${pct===100?'var(--green)':'var(--muted)'}">${done}/${tot} (${pct}%)</td>
       <td></td><td></td><td></td><td></td>
     </tr>`;
     if(!isCollapsed){
@@ -1684,7 +1685,7 @@ function renderSchedule(){
           <div style="flex-shrink:0">${ddSchedPart(p.id,pt.id)}</div>
         </div>`;
       }).join('')||`<div style="padding:10px 14px;font-size:11px;color:var(--muted)">No W/Os yet. Click "+ W/O" to add.</div>`;
-      const cardBorder=p.delivered?'var(--green)':kc;
+      const cardBorder=p.delivered||pct===100?'var(--green)':kc;
       return`<div id="scard-${p.id}" data-pid="${p.id}" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--r10);overflow:hidden;margin-bottom:8px;border-left:3px solid ${cardBorder};${p.delivered?'opacity:.75':''}">
         <div style="display:flex;align-items:center;gap:10px;padding:11px 14px;cursor:pointer" onclick="toggleSchedLoad('${p.id}')" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background=''">
           <span style="color:var(--muted);font-size:10px;flex-shrink:0">${chev}</span>
@@ -1694,7 +1695,7 @@ function renderSchedule(){
               ${p.projectName}
               ${p.delivered?`<span class="sbadge s-done" style="font-size:9px">Delivered ${p.deliveredAt?new Date(p.deliveredAt).toLocaleDateString('en-CA',{month:'short',day:'numeric'}):''}</span>`:''}
             </div>
-            <div style="font-size:11px;color:var(--muted);margin-top:2px">${tot} W/O${tot!==1?'s':''} · ${done} done${nowoN?` · <span style="color:var(--red)">${nowoN} no W/O</span>`:''}</div>
+            <div style="font-size:11px;color:${pct===100?'var(--green)':'var(--muted)'};margin-top:2px">${tot} W/O${tot!==1?'s':''} · ${done} done${nowoN?` · <span style="color:var(--red)">${nowoN} no W/O</span>`:''}</div>
           </div>
           <span class="due-chip ${dcc}" style="font-size:10px;flex-shrink:0">${dlTxt}</span>
           <div style="display:flex;align-items:center;gap:6px;flex-shrink:0" onclick="event.stopPropagation()">
@@ -2989,7 +2990,20 @@ let deferredInstallPrompt=null;
 
 // Register inline service worker via blob
 if('serviceWorker' in navigator){
-  navigator.serviceWorker.register('/sw.js').catch(()=>{});
+  const swCode=`
+    const CACHE='ve-scheduler-v1';
+    const ASSETS=['/'];
+    self.addEventListener('install',e=>e.waitUntil(caches.open(CACHE).then(c=>c.addAll(ASSETS))));
+    self.addEventListener('fetch',e=>e.respondWith(
+      caches.match(e.request).then(r=>r||fetch(e.request).then(res=>{
+        if(res.ok){const clone=res.clone();caches.open(CACHE).then(c=>c.put(e.request,clone));}
+        return res;
+      }).catch(()=>caches.match('/'))
+    ));
+  `;
+  const blob=new Blob([swCode],{type:'application/javascript'});
+  const swUrl=URL.createObjectURL(blob);
+  navigator.serviceWorker.register(swUrl).catch(()=>{});
 }
 
 // Capture install prompt
